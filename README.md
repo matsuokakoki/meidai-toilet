@@ -18,11 +18,15 @@ cd meidai_toilet
 ② ツール（Volta・Node・pnpm）のインストール
 
 Bash
+
 # 1. Voltaのインストール
+
 # 公式サイト https://docs.volta.sh/guide/getting-started の手順に従ってインストール。
+
 # ⚠️ インストール後、必ず一度ターミナル（VS Code）を再起動（バツボタンで閉じて開き直す）してください！
 
 # 2. Node.js 24 と pnpm のインストール（ターミナルで実行）
+
 volta install node@24
 volta install pnpm
 ③ パッケージの一括インストール
@@ -43,10 +47,6 @@ pnpm install
 Bash
 pnpm dev
 ブラウザで http://localhost:3000 を開いて、Next.jsの画面が表示されれば大成功です！🎉
-
-
-
-
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
