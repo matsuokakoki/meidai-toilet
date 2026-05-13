@@ -8,7 +8,11 @@ export default async function Home() {
   const { data: toilets, error } = await supabase.from('toilets').select('*')
 
   if (error) {
-    return <div className="p-4 text-red-500">エラーが発生しました: {error.message}</div>
+    return (
+      <div className="p-4 text-red-500">
+        エラーが発生しました: {error.message}
+      </div>
+    )
   }
 
   // 2. 取得したデータをクライアントに渡す
@@ -19,9 +23,11 @@ export default async function Home() {
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
             🚽 名大トイレナビ
           </h1>
-          <p className="text-gray-500 mt-1">一番近くて綺麗なトイレを瞬時に見つける</p>
+          <p className="text-gray-500 mt-1">
+            一番近くて綺麗なトイレを瞬時に見つける
+          </p>
         </header>
-        
+
         {/* 🌟 as any をやめて、as unknown as MapToilet[] という正しい変換ルールにする！ */}
         <MapWrapper toilets={(toilets as unknown as MapToilet[]) || []} />
       </div>

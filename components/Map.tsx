@@ -56,9 +56,9 @@ export default function MapComponent({ toilets }: { toilets: MapToilet[] }) {
 
   return (
     // 地図を表示するための枠（サイズや角丸などをTailwindで指定）
-    <div 
-      ref={mapContainer} 
-      className="w-full h-[70vh] min-h-[400px] rounded-xl shadow-lg border-2 border-gray-100 overflow-hidden" 
+    <div
+      ref={mapContainer}
+      className="w-full h-[70vh] min-h-[400px] rounded-xl shadow-lg border-2 border-gray-100 overflow-hidden"
     />
   )
 }
