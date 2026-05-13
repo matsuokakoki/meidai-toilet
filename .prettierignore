@@ -1,0 +1,2 @@
+# .prettierignore
+types/supabase.ts
