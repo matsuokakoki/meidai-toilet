@@ -5,7 +5,7 @@ export default function MyPage() {
     <div>
       <h1>マイページ</h1>
 
-      <Link href="/buildings">トイレ一覧へ</Link>
+      <Link href="/buildings">トイレ一覧ページへ</Link>
     </div>
   )
 }
