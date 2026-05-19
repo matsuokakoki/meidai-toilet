@@ -9,24 +9,13 @@ export default function ReviewCard({
   rating,
   comment,
 }: ReviewCardProps) {
-
   return (
-
     <div className="border rounded-xl p-4 shadow">
+      <h3 className="text-lg font-bold">{toilet}</h3>
 
-      <h3 className="text-lg font-bold">
-        {toilet}
-      </h3>
+      <p className="mt-2">{'★'.repeat(rating)}</p>
 
-      <p className="mt-2">
-        {"★".repeat(rating)}
-      </p>
-
-      <p className="mt-2">
-        {comment}
-      </p>
-
+      <p className="mt-2">{comment}</p>
     </div>
-
   )
 }
