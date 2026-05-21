@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef,useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { MapToilet } from './MapWrapper' // 🌟 先ほど作った型を読み込む
@@ -9,24 +9,22 @@ import { MapToilet } from './MapWrapper' // 🌟 先ほど作った型を読み�
 export default function MapComponent({ toilets }: { toilets: MapToilet[] }) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
-  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [userPos, setUserPos] = useState<[number, number] | null>(null)
   useEffect(() => {
-  // 1. ブラウザがGPS機能を持っているか確認
-  if ("geolocation" in navigator) {
-    
-    // 2. 「今の場所を教えて！」とブラウザに依頼
-    navigator.geolocation.getCurrentPosition((position) => {
-      
-      // 3. 緯度(lat)と経度(lng)を取り出す
-      const { latitude, longitude } = position.coords;
-      
-      // 4. 【ここで登場！】さっき作った更新用関数で保存する
-      setUserPos([longitude, latitude]); 
-      
-      console.log("現在地を取得しました:", longitude, latitude);
-    });
-  }
-}, []); // この「[]」は、画面が出た最初の1回だけ実行するという意味
+    // 1. ブラウザがGPS機能を持っているか確認
+    if ('geolocation' in navigator) {
+      // 2. 「今の場所を教えて！」とブラウザに依頼
+      navigator.geolocation.getCurrentPosition((position) => {
+        // 3. 緯度(lat)と経度(lng)を取り出す
+        const { latitude, longitude } = position.coords
+
+        // 4. 【ここで登場！】さっき作った更新用関数で保存する
+        setUserPos([longitude, latitude])
+
+        console.log('現在地を取得しました:', longitude, latitude)
+      })
+    }
+  }, []) // この「[]」は、画面が出た最初の1回だけ実行するという意味
   useEffect(() => {
     // すでに地図が描画されていたら何もしない（Reactの2重描画防止）
     if (map.current || !mapContainer.current) return
@@ -45,7 +43,7 @@ export default function MapComponent({ toilets }: { toilets: MapToilet[] }) {
     // 右上にズームボタン（＋ー）を追加
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
 
-        // 🌟 ここから「現在地」の処理
+    // 🌟 ここから「現在地」の処理
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { longitude, latitude } = position.coords
