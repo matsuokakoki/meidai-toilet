@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-import ToiletCard from "@/components/ToiletCard"
+import ToiletCard from '@/components/ToiletCard'
 
-import { getToilets } from "@/utils/supabase"
+import { getToilets } from '@/utils/supabase'
 
 type Toilet = {
   id: string
@@ -15,9 +15,8 @@ type Toilet = {
 }
 
 export default function BuildingsPage() {
-
   // 検索文字
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
 
   // トイレ一覧
   const [toilets, setToilets] = useState<Toilet[]>([])
@@ -27,9 +26,7 @@ export default function BuildingsPage() {
 
   // 初回読み込み
   useEffect(() => {
-
     async function fetchToilets() {
-
       const data = await getToilets()
 
       setToilets(data)
@@ -38,7 +35,6 @@ export default function BuildingsPage() {
     }
 
     fetchToilets()
-
   }, [])
 
   // 検索
@@ -53,23 +49,16 @@ export default function BuildingsPage() {
 
   return (
     <div className="p-4">
-
       {/* タイトル */}
-      <h1 className="text-3xl font-bold mb-4">
-        トイレ一覧
-      </h1>
+      <h1 className="text-3xl font-bold mb-4">トイレ一覧</h1>
 
       {/* マイページリンク */}
-      <Link
-        href="/mypage"
-        className="text-blue-500 underline"
-      >
+      <Link href="/mypage" className="text-blue-500 underline">
         マイページへ
       </Link>
 
       {/* 検索欄 */}
       <div className="mt-4">
-
         <input
           type="text"
           placeholder="トイレ検索"
@@ -77,14 +66,11 @@ export default function BuildingsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="border p-2 rounded w-full"
         />
-
       </div>
 
       {/* 一覧 */}
       <div className="space-y-4 mt-6">
-
         {filteredToilets.map((toilet) => (
-
           <ToiletCard
             key={toilet.id}
             id={toilet.id}
@@ -92,11 +78,8 @@ export default function BuildingsPage() {
             rating={toilet.average_rating}
             washlet={toilet.has_washlet}
           />
-
         ))}
-
       </div>
-
     </div>
   )
 }

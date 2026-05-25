@@ -70,24 +70,6 @@
 //   return true
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // src/utils/supabase.ts
 
 import { createClient } from '@supabase/supabase-js'
@@ -98,16 +80,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Supabase接続
-export const supabase = createClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey
-)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 /**
  * 1. トイレ一覧取得
  */
 export async function getToilets() {
-
   // toiletsテーブル + reviews取得
   const { data: toilets, error } = await supabase
     .from('toilets')
@@ -120,7 +98,6 @@ export async function getToilets() {
 
   // 平均評価計算
   const formattedToilets = toilets.map((toilet) => {
-
     const reviews = toilet.reviews || []
 
     const totalRating = reviews.reduce(
@@ -128,10 +105,7 @@ export async function getToilets() {
       0
     )
 
-    const averageRating =
-      reviews.length > 0
-        ? totalRating / reviews.length
-        : 0
+    const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0
 
     return {
       ...toilet,
@@ -152,18 +126,15 @@ export async function addReview(
   cleanRating: number,
   comment: string
 ) {
-
-  const { error } = await supabase
-    .from('reviews')
-    .insert([
-      {
-        toilet_id: toiletId,
-        user_id: 'local_user_1',
-        rating: rating,
-        cleanliness_rating: cleanRating,
-        comment: comment,
-      },
-    ])
+  const { error } = await supabase.from('reviews').insert([
+    {
+      toilet_id: toiletId,
+      user_id: 'local_user_1',
+      rating: rating,
+      cleanliness_rating: cleanRating,
+      comment: comment,
+    },
+  ])
 
   if (error) {
     console.error('口コミ投稿エラー:', error)
@@ -176,18 +147,13 @@ export async function addReview(
 /**
  * 3. お気に入り追加
  */
-export async function addFavorite(
-  toiletId: string
-) {
-
-  const { error } = await supabase
-    .from('favorites')
-    .insert([
-      {
-        user_id: 'local_user_1',
-        toilet_id: toiletId,
-      },
-    ])
+export async function addFavorite(toiletId: string) {
+  const { error } = await supabase.from('favorites').insert([
+    {
+      user_id: 'local_user_1',
+      toilet_id: toiletId,
+    },
+  ])
 
   if (error) {
     console.error('お気に入り追加エラー:', error)
@@ -201,16 +167,17 @@ export async function addFavorite(
  * 4. お気に入り取得
  */
 export async function getFavorites() {
-
   const { data, error } = await supabase
     .from('favorites')
-    .select(`
+    .select(
+      `
       id,
       toilets (
         id,
         name
       )
-    `)
+    `
+    )
     .eq('user_id', 'local_user_1')
 
   if (error) {
