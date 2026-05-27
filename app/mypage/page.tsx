@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-import FavoriteCard from "@/components/FavoriteCard"
-import ReviewCard from "@/components/ReviewCard"
+import FavoriteCard from '@/components/FavoriteCard'
+import ReviewCard from '@/components/ReviewCard'
 
 import {
   getFavorites,
@@ -13,7 +13,7 @@ import {
   getToilets,
   removeFavorite,
   deleteReview,
-} from "@/utils/supabase"
+} from '@/utils/supabase'
 
 type Favorite = {
   id: string
@@ -37,7 +37,6 @@ type Toilet = {
 }
 
 export default function MyPage() {
-
   // お気に入り
   const [favorites, setFavorites] = useState<Favorite[]>([])
 
@@ -48,15 +47,13 @@ export default function MyPage() {
   const [toilets, setToilets] = useState<Toilet[]>([])
 
   // 投稿用
-  const [selectedToilet, setSelectedToilet] = useState("")
+  const [selectedToilet, setSelectedToilet] = useState('')
   const [rating, setRating] = useState(5)
-  const [comment, setComment] = useState("")
+  const [comment, setComment] = useState('')
 
   // 初回読み込み
   useEffect(() => {
-
     async function fetchData() {
-
       // お気に入り取得
       const favoriteData = await getFavorites()
 
@@ -74,29 +71,21 @@ export default function MyPage() {
     }
 
     fetchData()
-
   }, [])
 
   /**
    * 口コミ投稿
    */
   async function handleSubmitReview() {
-
     if (!selectedToilet) {
-      alert("トイレを選択してください")
+      alert('トイレを選択してください')
       return
     }
 
-    const success = await addReview(
-      selectedToilet,
-      rating,
-      rating,
-      comment
-    )
+    const success = await addReview(selectedToilet, rating, rating, comment)
 
     if (success) {
-
-      alert("口コミ投稿完了！")
+      alert('口コミ投稿完了！')
 
       // 再取得
       const reviewData = await getMyReviews()
@@ -104,25 +93,19 @@ export default function MyPage() {
       setReviews(reviewData)
 
       // リセット
-      setSelectedToilet("")
+      setSelectedToilet('')
       setRating(5)
-      setComment("")
+      setComment('')
     }
   }
 
   /**
    * お気に入り削除
    */
-  async function handleRemoveFavorite(
-    favoriteId: string
-  ) {
-
-    const success = await removeFavorite(
-      favoriteId
-    )
+  async function handleRemoveFavorite(favoriteId: string) {
+    const success = await removeFavorite(favoriteId)
 
     if (success) {
-
       const favoriteData = await getFavorites()
 
       setFavorites(favoriteData)
@@ -132,16 +115,10 @@ export default function MyPage() {
   /**
    * 口コミ削除
    */
-  async function handleDeleteReview(
-    reviewId: string
-  ) {
-
-    const success = await deleteReview(
-      reviewId
-    )
+  async function handleDeleteReview(reviewId: string) {
+    const success = await deleteReview(reviewId)
 
     if (success) {
-
       const reviewData = await getMyReviews()
 
       setReviews(reviewData)
@@ -149,131 +126,81 @@ export default function MyPage() {
   }
 
   return (
-
     <div className="p-4">
-
       {/* タイトル */}
-      <h1 className="text-3xl font-bold mb-4">
-        マイページ
-      </h1>
+      <h1 className="text-3xl font-bold mb-4">マイページ</h1>
 
       {/* 一覧ページへ */}
-      <Link
-        href="/buildings"
-        className="text-blue-500 underline"
-      >
+      <Link href="/buildings" className="text-blue-500 underline">
         トイレ一覧へ
       </Link>
 
       {/* お気に入り */}
       <div className="mt-8">
-
-        <h2 className="text-2xl font-bold mb-4">
-          お気に入り
-        </h2>
+        <h2 className="text-2xl font-bold mb-4">お気に入り</h2>
 
         <div className="space-y-4">
-
           {favorites.length === 0 ? (
-
             <p>お気に入りがありません</p>
-
           ) : (
-
             favorites.map((favorite) => (
-
               <div
                 key={favorite.id}
                 className="flex items-center justify-between border p-4 rounded"
               >
-
-                <FavoriteCard
-                  name={favorite.toilets.name}
-                />
+                <FavoriteCard name={favorite.toilets.name} />
 
                 <button
-                  onClick={() =>
-                    handleRemoveFavorite(
-                      favorite.id
-                    )
-                  }
+                  onClick={() => handleRemoveFavorite(favorite.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded"
                 >
                   削除
                 </button>
-
               </div>
-
             ))
-
           )}
-
         </div>
-
       </div>
 
       {/* 口コミ投稿 */}
       <div className="mt-10">
-
-        <h2 className="text-2xl font-bold mb-4">
-          口コミ投稿
-        </h2>
+        <h2 className="text-2xl font-bold mb-4">口コミ投稿</h2>
 
         <div className="space-y-4">
-
           {/* トイレ選択 */}
           <select
             value={selectedToilet}
-            onChange={(e) =>
-              setSelectedToilet(e.target.value)
-            }
+            onChange={(e) => setSelectedToilet(e.target.value)}
             className="border p-2 rounded w-full"
           >
-
-            <option value="">
-              トイレを選択
-            </option>
+            <option value="">トイレを選択</option>
 
             {toilets.map((toilet) => (
-
-              <option
-                key={toilet.id}
-                value={toilet.id}
-              >
+              <option key={toilet.id} value={toilet.id}>
                 {toilet.name}
               </option>
-
             ))}
-
           </select>
 
           {/* 評価 */}
           <div>
-
-            <p className="mb-2">
-              評価（1〜5）
-            </p>
+            <p className="mb-2">評価（1〜5）</p>
 
             <input
               type="number"
               min="1"
               max="5"
               value={rating}
-              onChange={(e) =>
-                setRating(Number(e.target.value))
-              }
+              onChange={(e) => setRating(Number(e.target.value))}
               className="border p-2 rounded w-full"
             />
-
           </div>
 
           {/* コメント */}
           <textarea
             placeholder="口コミを書く"
             value={comment}
-            onChange={(e) =>
-              setComment(e.target.value)
-            }
+            onChange={(e) => setComment(e.target.value)}
             className="border p-2 rounded w-full"
           />
 
@@ -284,63 +211,36 @@ export default function MyPage() {
           >
             投稿
           </button>
-
         </div>
-
       </div>
 
       {/* 口コミ履歴 */}
       <div className="mt-10">
-
-        <h2 className="text-2xl font-bold mb-4">
-          口コミ履歴
-        </h2>
+        <h2 className="text-2xl font-bold mb-4">口コミ履歴</h2>
 
         <div className="space-y-4">
-
           {reviews.length === 0 ? (
-
             <p>口コミがありません</p>
-
           ) : (
-
             reviews.map((review) => (
-
-              <div
-                key={review.id}
-                className="border p-4 rounded"
-              >
-
+              <div key={review.id} className="border p-4 rounded">
                 <ReviewCard
                   toilet={review.toilets.name}
                   rating={review.rating}
-                  comment={
-                    review.comment ??
-                    "コメントなし"
-                  }
+                  comment={review.comment ?? 'コメントなし'}
                 />
 
                 <button
-                  onClick={() =>
-                    handleDeleteReview(
-                      review.id
-                    )
-                  }
+                  onClick={() => handleDeleteReview(review.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded mt-2"
                 >
                   削除
                 </button>
-
               </div>
-
             ))
-
           )}
-
         </div>
-
       </div>
-
     </div>
   )
 }

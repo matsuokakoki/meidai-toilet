@@ -72,26 +72,6 @@
 
 // src/utils/supabase.ts
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../types/supabase'
 
@@ -209,21 +189,22 @@ export async function getFavorites() {
 }
 
 export async function getMyReviews() {
-
   const { data, error } = await supabase
-    .from("reviews")
-    .select(`
+    .from('reviews')
+    .select(
+      `
       id,
       rating,
       comment,
       toilets (
         name
       )
-    `)
-    .eq("user_id", "local_user_1")
+    `
+    )
+    .eq('user_id', 'local_user_1')
 
   if (error) {
-    console.error("口コミ取得エラー:", error)
+    console.error('口コミ取得エラー:', error)
     return []
   }
 
@@ -234,14 +215,13 @@ export async function getMyReviews() {
  * 5. お気に入り削除
  */
 export async function removeFavorite(favoriteId: string) {
-
   const { error } = await supabase
-    .from("favorites")
+    .from('favorites')
     .delete()
-    .eq("id", favoriteId)
+    .eq('id', favoriteId)
 
   if (error) {
-    console.error("お気に入り削除エラー:", error)
+    console.error('お気に入り削除エラー:', error)
     return false
   }
 
@@ -252,14 +232,10 @@ export async function removeFavorite(favoriteId: string) {
  * 6. 口コミ削除
  */
 export async function deleteReview(reviewId: string) {
-
-  const { error } = await supabase
-    .from("reviews")
-    .delete()
-    .eq("id", reviewId)
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
 
   if (error) {
-    console.error("口コミ削除エラー:", error)
+    console.error('口コミ削除エラー:', error)
     return false
   }
 
