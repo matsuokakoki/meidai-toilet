@@ -72,6 +72,26 @@
 
 // src/utils/supabase.ts
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../types/supabase'
 
@@ -186,4 +206,62 @@ export async function getFavorites() {
   }
 
   return data
+}
+
+export async function getMyReviews() {
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(`
+      id,
+      rating,
+      comment,
+      toilets (
+        name
+      )
+    `)
+    .eq("user_id", "local_user_1")
+
+  if (error) {
+    console.error("口コミ取得エラー:", error)
+    return []
+  }
+
+  return data
+}
+
+/**
+ * 5. お気に入り削除
+ */
+export async function removeFavorite(favoriteId: string) {
+
+  const { error } = await supabase
+    .from("favorites")
+    .delete()
+    .eq("id", favoriteId)
+
+  if (error) {
+    console.error("お気に入り削除エラー:", error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * 6. 口コミ削除
+ */
+export async function deleteReview(reviewId: string) {
+
+  const { error } = await supabase
+    .from("reviews")
+    .delete()
+    .eq("id", reviewId)
+
+  if (error) {
+    console.error("口コミ削除エラー:", error)
+    return false
+  }
+
+  return true
 }
