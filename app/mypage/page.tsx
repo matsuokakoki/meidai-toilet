@@ -158,11 +158,9 @@ export default function MyPage() {
                   items-center
                 "
               >
-              <Link
-                href={`/buildings/${favorite.toilets.id}`}
-              >
-                <FavoriteCard name={favorite.toilets.name} />
-              </Link>
+                <Link href={`/buildings/${favorite.toilets.id}`}>
+                  <FavoriteCard name={favorite.toilets.name} />
+                </Link>
 
                 <button
                   onClick={() => handleRemoveFavorite(favorite.id)}

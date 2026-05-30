@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 import {
   addFavorite,
   isFavorite,
   removeFavoriteByToilet,
-} from "@/utils/supabase"
+} from '@/utils/supabase'
 
 type ToiletCardProps = {
   id: string
@@ -22,45 +22,35 @@ export default function ToiletCard({
   rating,
   washlet,
 }: ToiletCardProps) {
-
-  const [favorite, setFavorite] =
-    useState(false)
+  const [favorite, setFavorite] = useState(false)
 
   useEffect(() => {
-
     async function checkFavorite() {
-
-      const result =
-        await isFavorite(id)
+      const result = await isFavorite(id)
 
       setFavorite(result)
     }
 
     checkFavorite()
-
   }, [id])
 
   async function handleFavorite() {
+    if (favorite) {
+      const success = await removeFavoriteByToilet(id)
 
-  if (favorite) {
+      if (success) {
+        setFavorite(false)
+      }
 
-    const success =
-      await removeFavoriteByToilet(id)
-
-    if (success) {
-      setFavorite(false)
+      return
     }
 
-    return
-  }
+    const success = await addFavorite(id)
 
-  const success =
-    await addFavorite(id)
-
-  if (success) {
-    setFavorite(true)
+    if (success) {
+      setFavorite(true)
+    }
   }
-}
 
   return (
     <div
@@ -72,31 +62,19 @@ export default function ToiletCard({
         bg-white
       "
     >
-
       <Link href={`/buildings/${id}`}>
-
         <div className="cursor-pointer">
+          <h2 className="text-xl font-bold">{name}</h2>
 
-          <h2 className="text-xl font-bold">
-            {name}
-          </h2>
-
-          <p className="mt-2">
-            評価：
-            ★ {rating.toFixed(1)}
-          </p>
+          <p className="mt-2">評価： ★ {rating.toFixed(1)}</p>
 
           <p>
             ウォシュレット：
-            {washlet ? "あり" : "なし"}
+            {washlet ? 'あり' : 'なし'}
           </p>
 
-          <p className="text-blue-500 underline mt-2">
-            詳細を見る
-          </p>
-
+          <p className="text-blue-500 underline mt-2">詳細を見る</p>
         </div>
-
       </Link>
 
       <button
@@ -111,31 +89,11 @@ export default function ToiletCard({
           disabled:bg-gray-400
         "
       >
-        {favorite
-          ? "お気に入り解除"
-          : "お気に入り追加"}
+        {favorite ? 'お気に入り解除' : 'お気に入り追加'}
       </button>
-
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // "use client"
 
@@ -223,24 +181,6 @@ export default function ToiletCard({
 //     </div>
 //   )
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 'use client'
 

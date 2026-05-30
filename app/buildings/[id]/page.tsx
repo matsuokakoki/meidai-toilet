@@ -1,14 +1,10 @@
-"use client"
+'use client'
 
-import {
-  use,
-  useEffect,
-  useState,
-} from "react"
+import { use, useEffect, useState } from 'react'
 
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 
-import { getToiletById } from "@/utils/supabase"
+import { getToiletById } from '@/utils/supabase'
 
 type Review = {
   id: string
@@ -31,23 +27,17 @@ export default function ToiletDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-
   const { id } = use(params)
 
   const router = useRouter()
 
-  const [toilet, setToilet] =
-    useState<Toilet | null>(null)
+  const [toilet, setToilet] = useState<Toilet | null>(null)
 
-  const [loading, setLoading] =
-    useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-
     async function fetchToilet() {
-
-      const data =
-        await getToiletById(id)
+      const data = await getToiletById(id)
 
       setToilet(data)
 
@@ -55,41 +45,28 @@ export default function ToiletDetailPage({
     }
 
     fetchToilet()
-
   }, [id])
 
   // ローディング
   if (loading) {
-    return (
-      <p className="p-4">
-        読み込み中...
-      </p>
-    )
+    return <p className="p-4">読み込み中...</p>
   }
 
   // データなし
   if (!toilet) {
-    return (
-      <p className="p-4">
-        トイレが見つかりません
-      </p>
-    )
+    return <p className="p-4">トイレが見つかりません</p>
   }
 
   const averageRating =
     toilet.reviews.length > 0
       ? (
-          toilet.reviews.reduce(
-            (sum, review) =>
-              sum + review.rating,
-            0
-          ) / toilet.reviews.length
+          toilet.reviews.reduce((sum, review) => sum + review.rating, 0) /
+          toilet.reviews.length
         ).toFixed(1)
-      : "0"
+      : '0'
 
   return (
     <div className="p-4">
-
       {/* 戻る */}
       <button
         onClick={() => router.back()}
@@ -102,30 +79,20 @@ export default function ToiletDetailPage({
       </button>
 
       {/* タイトル */}
-      <h1 className="text-3xl font-bold mt-4">
-        {toilet.name}
-      </h1>
+      <h1 className="text-3xl font-bold mt-4">{toilet.name}</h1>
 
       {/* 基本情報 */}
       <div className="mt-6 space-y-2">
-
-        <p>
-          平均評価：
-          ★ {averageRating}
-        </p>
+        <p>平均評価： ★ {averageRating}</p>
 
         <p>
           ウォシュレット：
-          {toilet.has_washlet
-            ? "あり"
-            : "なし"}
+          {toilet.has_washlet ? 'あり' : 'なし'}
         </p>
 
         <p>
           多目的トイレ：
-          {toilet.is_gender_neutral
-            ? "あり"
-            : "なし"}
+          {toilet.is_gender_neutral ? 'あり' : 'なし'}
         </p>
 
         <p>
@@ -137,79 +104,36 @@ export default function ToiletDetailPage({
           和式：
           {toilet.japanese_count ?? 0}個
         </p>
-
       </div>
 
       {/* 口コミ */}
       <div className="mt-10">
-
-        <h2 className="text-2xl font-bold mb-4">
-          口コミ
-        </h2>
+        <h2 className="text-2xl font-bold mb-4">口コミ</h2>
 
         <div className="space-y-4">
-
           {toilet.reviews.length === 0 ? (
-
-            <p>
-              口コミなし
-            </p>
-
+            <p>口コミなし</p>
           ) : (
-
-            toilet.reviews.map(
-              (review) => (
-
-                <div
-                  key={review.id}
-                  className="
+            toilet.reviews.map((review) => (
+              <div
+                key={review.id}
+                className="
                     border
                     rounded
                     p-4
                   "
-                >
+              >
+                <p>★ {review.rating}</p>
 
-                  <p>
-                    ★ {review.rating}
-                  </p>
-
-                  <p className="mt-2">
-                    {review.comment ??
-                      "コメントなし"}
-                  </p>
-
-                </div>
-
-              )
-            )
-
+                <p className="mt-2">{review.comment ?? 'コメントなし'}</p>
+              </div>
+            ))
           )}
-
         </div>
-
       </div>
-
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // "use client"
 
@@ -388,24 +312,6 @@ export default function ToiletDetailPage({
 //     </div>
 //   )
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // "use client"
 

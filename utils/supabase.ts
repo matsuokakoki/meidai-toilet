@@ -168,42 +168,36 @@ export async function deleteReview(reviewId: string) {
   return true
 }
 
-export async function getToiletById(
-  id: string
-) {
-
+export async function getToiletById(id: string) {
   const { data, error } = await supabase
-    .from("toilets")
-    .select(`
+    .from('toilets')
+    .select(
+      `
       *,
       reviews (
         id,
         rating,
         comment
       )
-    `)
-    .eq("id", id)
+    `
+    )
+    .eq('id', id)
     .single()
 
   if (error) {
-    console.error(
-      "トイレ詳細取得エラー:",
-      error
-    )
+    console.error('トイレ詳細取得エラー:', error)
     return null
   }
 
   return data
 }
 
-export async function isFavorite(
-  toiletId: string
-) {
+export async function isFavorite(toiletId: string) {
   const { data, error } = await supabase
-    .from("favorites")
-    .select("id")
-    .eq("user_id", "local_user_1")
-    .eq("toilet_id", toiletId)
+    .from('favorites')
+    .select('id')
+    .eq('user_id', 'local_user_1')
+    .eq('toilet_id', toiletId)
 
   if (error) {
     return false
@@ -212,43 +206,20 @@ export async function isFavorite(
   return data.length > 0
 }
 
-export async function removeFavoriteByToilet(
-  toiletId: string
-) {
-
+export async function removeFavoriteByToilet(toiletId: string) {
   const { error } = await supabase
-    .from("favorites")
+    .from('favorites')
     .delete()
-    .eq("user_id", "local_user_1")
-    .eq("toilet_id", toiletId)
+    .eq('user_id', 'local_user_1')
+    .eq('toilet_id', toiletId)
 
   if (error) {
-    console.error(
-      "お気に入り削除エラー:",
-      error
-    )
+    console.error('お気に入り削除エラー:', error)
     return false
   }
 
   return true
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // src/utils/supabase.ts
 // import { createClient } from '@supabase/supabase-js'
