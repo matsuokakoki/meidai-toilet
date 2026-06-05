@@ -41,8 +41,7 @@ export default function ToiletCard({
 
   async function handleFavorite() {
     if (favorite) {
-      const success =
-        await removeFavoriteByToilet(id)
+      const success = await removeFavoriteByToilet(id)
 
       if (success) {
         setFavorite(false)
@@ -51,8 +50,7 @@ export default function ToiletCard({
       return
     }
 
-    const success =
-      await addFavorite(id)
+    const success = await addFavorite(id)
 
     if (success) {
       setFavorite(true)
@@ -71,14 +69,9 @@ export default function ToiletCard({
     >
       <Link href={`/buildings/${id}`}>
         <div className="cursor-pointer">
+          <h2 className="text-xl font-bold">{name}</h2>
 
-          <h2 className="text-xl font-bold">
-            {name}
-          </h2>
-
-          <p className="mt-2">
-            評価：★ {rating.toFixed(1)}
-          </p>
+          <p className="mt-2">評価：★ {rating.toFixed(1)}</p>
 
           <p>
             ウォシュレット：
@@ -95,10 +88,7 @@ export default function ToiletCard({
             {japaneseCount ?? 0}個
           </p>
 
-          <p className="text-blue-500 underline mt-2">
-            詳細を見る
-          </p>
-
+          <p className="text-blue-500 underline mt-2">詳細を見る</p>
         </div>
       </Link>
 
@@ -113,32 +103,11 @@ export default function ToiletCard({
           bg-yellow-500
         "
       >
-        {favorite
-          ? 'お気に入り解除'
-          : 'お気に入り追加'}
+        {favorite ? 'お気に入り解除' : 'お気に入り追加'}
       </button>
-
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 'use client'
 
@@ -236,4 +205,3 @@ export default function ToiletCard({
 //     </div>
 //   )
 // }
-

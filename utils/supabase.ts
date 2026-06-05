@@ -48,7 +48,6 @@ export async function getToilets() {
  * 2. 口コミ投稿
  */
 
-
 export async function addReview(
   toiletId: string,
   rating: number,
@@ -57,9 +56,7 @@ export async function addReview(
 ) {
   const userId = getUserId()
 
-  const fiveMinutesAgo = new Date(
-    Date.now() - 5 * 60 * 1000
-  ).toISOString()
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
   const { data: recentReviews } = await supabase
     .from('reviews')
@@ -72,17 +69,15 @@ export async function addReview(
     return false
   }
 
-  const { error } = await supabase
-    .from('reviews')
-    .insert([
-      {
-        toilet_id: toiletId,
-        user_id: userId,
-        rating,
-        cleanliness_rating: cleanRating,
-        comment,
-      },
-    ])
+  const { error } = await supabase.from('reviews').insert([
+    {
+      toilet_id: toiletId,
+      user_id: userId,
+      rating,
+      cleanliness_rating: cleanRating,
+      comment,
+    },
+  ])
 
   if (error) {
     console.error('口コミ投稿エラー:', error)
@@ -96,9 +91,7 @@ export async function addReview(
  * 3. お気に入り追加
  */
 
-export async function addFavorite(
-  toiletId: string
-) {
+export async function addFavorite(toiletId: string) {
   const userId = getUserId()
 
   const { data } = await supabase
@@ -111,26 +104,20 @@ export async function addFavorite(
     return true
   }
 
-  const { error } = await supabase
-    .from('favorites')
-    .insert([
-      {
-        user_id: userId,
-        toilet_id: toiletId,
-      },
-    ])
+  const { error } = await supabase.from('favorites').insert([
+    {
+      user_id: userId,
+      toilet_id: toiletId,
+    },
+  ])
 
   if (error) {
-    console.error(
-      'お気に入り追加エラー:',
-      error
-    )
+    console.error('お気に入り追加エラー:', error)
     return false
   }
 
   return true
 }
-
 
 /**
  * 4. お気に入り取得
@@ -140,57 +127,49 @@ export async function getFavorites() {
 
   const { data, error } = await supabase
     .from('favorites')
-    .select(`
+    .select(
+      `
       id,
       toilets (
         id,
         name
       )
-    `)
+    `
+    )
     .eq('user_id', userId)
 
   if (error) {
-    console.error(
-      'お気に入り取得エラー:',
-      error
-    )
+    console.error('お気に入り取得エラー:', error)
     return []
   }
 
   return data
 }
-
-
-
-
-
 
 export async function getMyReviews() {
   const userId = getUserId()
 
   const { data, error } = await supabase
     .from('reviews')
-    .select(`
+    .select(
+      `
       id,
       rating,
       comment,
       toilets (
         name
       )
-    `)
+    `
+    )
     .eq('user_id', userId)
 
   if (error) {
-    console.error(
-      '口コミ取得エラー:',
-      error
-    )
+    console.error('口コミ取得エラー:', error)
     return []
   }
 
   return data
 }
-
 
 /**
  * 5. お気に入り削除
@@ -212,9 +191,7 @@ export async function removeFavorite(favoriteId: string) {
 /**
  * 6. 口コミ削除
  */
-export async function deleteReview(
-  reviewId: string
-) {
+export async function deleteReview(reviewId: string) {
   const userId = getUserId()
 
   const { error } = await supabase
@@ -224,10 +201,7 @@ export async function deleteReview(
     .eq('user_id', userId)
 
   if (error) {
-    console.error(
-      '口コミ削除エラー:',
-      error
-    )
+    console.error('口コミ削除エラー:', error)
     return false
   }
 
@@ -258,9 +232,7 @@ export async function getToiletById(id: string) {
   return data
 }
 
-export async function isFavorite(
-  toiletId: string
-) {
+export async function isFavorite(toiletId: string) {
   const userId = getUserId()
 
   const { data, error } = await supabase
@@ -276,9 +248,7 @@ export async function isFavorite(
   return data.length > 0
 }
 
-export async function removeFavoriteByToilet(
-  toiletId: string
-) {
+export async function removeFavoriteByToilet(toiletId: string) {
   const userId = getUserId()
 
   const { error } = await supabase
@@ -288,10 +258,7 @@ export async function removeFavoriteByToilet(
     .eq('toilet_id', toiletId)
 
   if (error) {
-    console.error(
-      'お気に入り削除エラー:',
-      error
-    )
+    console.error('お気に入り削除エラー:', error)
     return false
   }
 
