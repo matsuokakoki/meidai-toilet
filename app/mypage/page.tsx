@@ -210,18 +210,14 @@ export default function MyPage() {
             <p className="mb-2">評価</p>
 
             <div className="flex gap-2">
-              {[1,2,3,4,5].map((star)=>(
+              {[1, 2, 3, 4, 5].map((star) => (
                 <button
-                  key = {star}
-                  type = "button"
-                  onClick={()=>setRating(star)}
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
                   className={`
                     text-4xl
-                    ${
-                      rating >= star
-                        ? "text-yellow-400"
-                        : "text-gray-300"
-                    }
+                    ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}
                     `}
                 >
                   ★
@@ -229,9 +225,7 @@ export default function MyPage() {
               ))}
             </div>
 
-            <p className="mt-2">
-              {rating}/5
-            </p>
+            <p className="mt-2">{rating}/5</p>
           </div>
 
           {/* コメント */}
