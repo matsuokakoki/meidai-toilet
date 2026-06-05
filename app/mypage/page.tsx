@@ -207,21 +207,31 @@ export default function MyPage() {
 
           {/* 評価 */}
           <div>
-            <p className="mb-2">評価（1〜5）</p>
+            <p className="mb-2">評価</p>
 
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              className="
-                border
-                p-2
-                rounded
-                w-full
-              "
-            />
+            <div className="flex gap-2">
+              {[1,2,3,4,5].map((star)=>(
+                <button
+                  key = {star}
+                  type = "button"
+                  onClick={()=>setRating(star)}
+                  className={`
+                    text-4xl
+                    ${
+                      rating >= star
+                        ? "text-yellow-400"
+                        : "text-gray-300"
+                    }
+                    `}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-2">
+              {rating}/5
+            </p>
           </div>
 
           {/* コメント */}
