@@ -15,8 +15,8 @@ type Toilet = {
   has_washlet: boolean | null
   is_gender_neutral: boolean | null
 
-  western_count?: number | null
-  japanese_count?: number | null
+  western_style_count: number | null
+  japanese_style_count: number | null
 }
 
 export default function BuildingsPage() {
@@ -69,10 +69,10 @@ export default function BuildingsPage() {
     const matchesUniversal = !universalOnly || toilet.is_gender_neutral
 
     // 洋式
-    const matchesWestern = (toilet.western_count ?? 0) >= westernCount
+    const matchesWestern = (toilet.western_style_count ?? 0) >= westernCount
 
     // 和式
-    const matchesJapanese = (toilet.japanese_count ?? 0) >= japaneseCount
+    const matchesJapanese = (toilet.japanese_style_count ?? 0) >= japaneseCount
 
     // 星
     const matchesRating = toilet.average_rating >= minimumRating
@@ -212,6 +212,8 @@ export default function BuildingsPage() {
             name={toilet.name}
             rating={toilet.average_rating}
             washlet={toilet.has_washlet ?? false}
+            westernCount={toilet.western_style_count ?? 0}
+            japaneseCount={toilet.japanese_style_count ?? 0}
           />
         ))}
       </div>
