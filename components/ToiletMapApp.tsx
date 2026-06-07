@@ -361,26 +361,14 @@ function Stars({ rating, size = 11 }: { rating: number; size?: number }) {
             {half && (
               <defs>
                 <linearGradient id={`g${i}s${size}`} x1="0" x2="1">
-                  <stop
-                    offset={`${(rating % 1) * 100}%`}
-                    stopColor="#F5A623"
-                  />
-                  <stop
-                    offset={`${(rating % 1) * 100}%`}
-                    stopColor="#DDD"
-                  />
+                  <stop offset={`${(rating % 1) * 100}%`} stopColor="#F5A623" />
+                  <stop offset={`${(rating % 1) * 100}%`} stopColor="#DDD" />
                 </linearGradient>
               </defs>
             )}
             <path
               d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-              fill={
-                full
-                  ? '#F5A623'
-                  : half
-                    ? `url(#g${i}s${size})`
-                    : '#E0E0E0'
-              }
+              fill={full ? '#F5A623' : half ? `url(#g${i}s${size})` : '#E0E0E0'}
             />
           </svg>
         )
@@ -459,11 +447,7 @@ function Chip({
 }
 
 // ── CampusMap ──────────────────────────────────────────────────────────────────
-function CampusMap({
-  userPos,
-}: {
-  userPos: { x: number; y: number } | null
-}) {
+function CampusMap({ userPos }: { userPos: { x: number; y: number } | null }) {
   const B = '#C0BAB0',
     R = '#D2CCC2',
     BG = '#EDEAE3'
@@ -776,7 +760,11 @@ function FilterPanel({
     >
       <div
         onClick={onClose}
-        style={{ flex: 1, background: 'rgba(0,0,0,.45)', animation: 'fadeIn .2s' }}
+        style={{
+          flex: 1,
+          background: 'rgba(0,0,0,.45)',
+          animation: 'fadeIn .2s',
+        }}
       />
       <div
         style={{
@@ -790,7 +778,11 @@ function FilterPanel({
         }}
       >
         <div
-          style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 6px' }}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '14px 0 6px',
+          }}
         >
           <div
             style={{
@@ -891,9 +883,7 @@ function FilterPanel({
             </div>
           </div>
           {/* Rating */}
-          <div
-            style={{ borderTop: '8px solid #F6F6F6', padding: '16px 20px' }}
-          >
+          <div style={{ borderTop: '8px solid #F6F6F6', padding: '16px 20px' }}>
             <p
               style={{
                 fontSize: 12,
@@ -1081,7 +1071,11 @@ function ToiletPopup({
     >
       {/* Drag handle */}
       <div
-        style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '12px 0 8px',
+        }}
       >
         <div
           style={{
@@ -1468,13 +1462,22 @@ function AppHeader({
             padding: '14px 20px 0',
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-.3px' }}>
+          <span
+            style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-.3px' }}
+          >
             {time}
           </span>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <svg width="17" height="11" viewBox="0 0 17 11">
               <rect x="0" y="7" width="3" height="4" rx=".5" fill="#222" />
-              <rect x="4.5" y="4.5" width="3" height="6.5" rx=".5" fill="#222" />
+              <rect
+                x="4.5"
+                y="4.5"
+                width="3"
+                height="6.5"
+                rx=".5"
+                fill="#222"
+              />
               <rect x="9" y="2" width="3" height="9" rx=".5" fill="#222" />
               <rect x="13.5" y="0" width="3" height="11" rx=".5" fill="#222" />
             </svg>
@@ -1718,7 +1721,10 @@ export default function ToiletMapApp({
       const lat = t.lat!
       const lng = t.lng!
       const { x, y } = latLngToSvgPct(lat, lng)
-      const score = calculateCongestion(t as Parameters<typeof calculateCongestion>[0], hourDecimal)
+      const score = calculateCongestion(
+        t as Parameters<typeof calculateCongestion>[0],
+        hourDecimal
+      )
       const dist = userPos
         ? Math.round(
             getDistanceFromLatLonInM(userPos.lat, userPos.lng, lat, lng)
@@ -1745,8 +1751,10 @@ export default function ToiletMapApp({
 
       const cleanAvg =
         t.reviews && t.reviews.length > 0
-          ? t.reviews.reduce((sum, r) => sum + (r.cleanliness_rating ?? r.rating), 0) /
-            t.reviews.length
+          ? t.reviews.reduce(
+              (sum, r) => sum + (r.cleanliness_rating ?? r.rating),
+              0
+            ) / t.reviews.length
           : t.average_rating
 
       return {
@@ -1854,9 +1862,7 @@ export default function ToiletMapApp({
               t={t}
               isActive={selected?.id === t.id}
               isDimmed={!filteredSet.has(t.id)}
-              onTap={(tt) =>
-                setSelected((p) => (p?.id === tt.id ? null : tt))
-              }
+              onTap={(tt) => setSelected((p) => (p?.id === tt.id ? null : tt))}
             />
           ))}
         </div>
@@ -1889,7 +1895,10 @@ export default function ToiletMapApp({
         }}
       >
         {Object.entries(CONGESTION).map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            key={k}
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+          >
             <div
               style={{
                 width: 8,
@@ -1923,7 +1932,9 @@ export default function ToiletMapApp({
         }}
       >
         <button
-          onClick={() => setScale((s) => Math.min(+(s + 0.35).toFixed(2), 1.55))}
+          onClick={() =>
+            setScale((s) => Math.min(+(s + 0.35).toFixed(2), 1.55))
+          }
           style={{
             width: 44,
             height: 44,
@@ -1945,7 +1956,9 @@ export default function ToiletMapApp({
           +
         </button>
         <button
-          onClick={() => setScale((s) => Math.max(+(s - 0.35).toFixed(2), 0.65))}
+          onClick={() =>
+            setScale((s) => Math.max(+(s - 0.35).toFixed(2), 0.65))
+          }
           style={{
             width: 44,
             height: 44,
