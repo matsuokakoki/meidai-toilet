@@ -1678,8 +1678,12 @@ export default function MapV4App({
           existing.marker.setLngLat([t.lng, t.lat])
           existing.toilet = t
         } else {
+          // NOTE: Do not set position on this element. MapLibre adds the
+          // `.maplibregl-marker` class (position:absolute) and positions the
+          // marker via transform. An inline `position:relative` here overrides
+          // that and drops the pin into normal document flow, so pins land at
+          // UI/layout-dependent positions instead of their projected location.
           const el = document.createElement('div')
-          el.style.cssText = 'position:relative;'
 
           const root = createRoot(el)
           root.render(
