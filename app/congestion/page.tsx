@@ -1,8 +1,6 @@
-// app/congestion/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { getToilets } from '@/utils/supabase'
 import {
   calculateCongestion,
@@ -11,514 +9,837 @@ import {
 } from '@/utils/algorithm'
 import { fetchCurrentWeather } from '@/utils/weather'
 import { ToiletData } from '@/utils/algorithm'
+import SharedBottomNav from '@/components/SharedBottomNav'
 
-export default function CongestionTestPage() {
+const BRAND = '#C41E5A'
+const GREEN = '#1EBE7A'
+
+const CONGESTION_COLOR = {
+  low: '#1EBE7A',
+  medium: '#E8940F',
+  high: '#D93025',
+}
+
+function formatTime(totalMinutes: number) {
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  return `${h}:${m.toString().padStart(2, '0')}`
+}
+
+function getAlgorithmHour(totalMinutes: number) {
+  return Math.floor(totalMinutes / 60) + (totalMinutes % 60) / 100
+}
+
+function formatFloor(floor: number | null | undefined) {
+  if (floor == null) return '1F'
+  if (floor < 0) return `B${Math.abs(floor)}F`
+  return `${floor}F`
+}
+
+function congestionColor(score: number) {
+  if (score < 40) return CONGESTION_COLOR.low
+  if (score < 70) return CONGESTION_COLOR.medium
+  return CONGESTION_COLOR.high
+}
+
+function congestionLabel(score: number) {
+  if (score < 40) return '空き'
+  if (score < 70) return 'やや混雑'
+  return '混雑中'
+}
+
+export default function CongestionPage() {
   const [toilets, setToilets] = useState<ToiletData[]>([])
-
-  const [testTimeInMinutes, setTestTimeInMinutes] = useState<number>(() => {
-    const now = new Date()
-    const minutes = Math.floor(now.getMinutes() / 15) * 15
-    return now.getHours() * 60 + minutes
-  })
-
-  const [testWeather, setTestWeather] = useState<string>('Sunny')
   const [loading, setLoading] = useState(true)
-  const [expandedToiletId, setExpandedToiletId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const [sortOption, setSortOption] = useState<string>('default')
-  const [filterWashlet, setFilterWashlet] = useState<boolean>(false)
-  const [filterMultipurpose, setFilterMultipurpose] = useState<boolean>(false)
-  const [filterGender, setFilterGender] = useState<string>('all')
+  const [timeInMinutes, setTimeInMinutes] = useState(() => {
+    const now = new Date()
+    return now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15
+  })
+  const [weather, setWeather] = useState('Sunny')
+  const [sortOption, setSortOption] = useState('default')
+  const [filterWashlet, setFilterWashlet] = useState(false)
+  const [filterMultipurpose, setFilterMultipurpose] = useState(false)
+  const [filterGender, setFilterGender] = useState('all')
   const [userLocation, setUserLocation] = useState<{
     lat: number
     lng: number
   } | null>(null)
+  const [controlsOpen, setControlsOpen] = useState(false)
 
   useEffect(() => {
-    async function fetchToilets() {
-      const data = await getToilets()
+    async function load() {
+      const [data, w] = await Promise.all([getToilets(), fetchCurrentWeather()])
       setToilets(data)
-      const currentWeather = await fetchCurrentWeather()
-      setTestWeather(currentWeather)
+      setWeather(w)
       setLoading(false)
     }
-    fetchToilets()
+    load()
   }, [])
 
-  const resetToCurrentTime = () => {
-    const now = new Date()
-    const minutes = Math.floor(now.getMinutes() / 15) * 15
-    setTestTimeInMinutes(now.getHours() * 60 + minutes)
-  }
-
   const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert('お使いのブラウザは現在地取得に対応していません。')
-      return
-    }
+    if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
+      ({ coords }) => {
+        setUserLocation({ lat: coords.latitude, lng: coords.longitude })
         setSortOption('distance_close')
       },
-      (error) => {
-        alert('現在地の取得に失敗しました。スマホの設定を確認してください。')
-      }
+      () => {}
     )
   }
 
-  const resetFilters = () => {
-    setSortOption('default')
-    setFilterWashlet(false)
-    setFilterMultipurpose(false)
-    setFilterGender('all')
+  const resetToNow = () => {
+    const now = new Date()
+    setTimeInMinutes(now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15)
   }
 
-  const formatTime = (totalMinutes: number) => {
-    const hours = Math.floor(totalMinutes / 60)
-    const mins = totalMinutes % 60
-    return `${hours}:${mins.toString().padStart(2, '0')}`
-  }
-
-  const getAlgorithmHour = (totalMinutes: number) => {
-    const hours = Math.floor(totalMinutes / 60)
-    const mins = totalMinutes % 60
-    return hours + mins / 100
-  }
-
-  const formatFloor = (floor: number | null | undefined) => {
-    if (floor === null || floor === undefined) return '1階'
-    if (floor < 0) return `B${Math.abs(floor)}階`
-    return `${floor}階`
-  }
-
-  let displayedToilets = [...toilets]
-
-  if (filterWashlet)
-    displayedToilets = displayedToilets.filter((t) => t.has_washlet)
-  if (filterMultipurpose)
-    displayedToilets = displayedToilets.filter((t) => t.is_multipurpose)
+  let displayed = [...toilets]
+  if (filterWashlet) displayed = displayed.filter((t) => t.has_washlet)
+  if (filterMultipurpose) displayed = displayed.filter((t) => t.is_multipurpose)
   if (filterGender !== 'all') {
     if (filterGender === 'neutral')
-      displayedToilets = displayedToilets.filter((t) => t.is_gender_neutral)
+      displayed = displayed.filter((t) => t.is_gender_neutral)
     else
-      displayedToilets = displayedToilets.filter(
+      displayed = displayed.filter(
         (t) => t.gender === filterGender || t.gender === 'all'
       )
   }
 
-  displayedToilets.sort((a, b) => {
+  const algHour = getAlgorithmHour(timeInMinutes)
+  displayed.sort((a, b) => {
     if (sortOption === 'rating_high')
       return (b.average_rating || 0) - (a.average_rating || 0)
-    if (sortOption === 'congestion_low') {
-      const scoreA = calculateCongestion(
-        a,
-        getAlgorithmHour(testTimeInMinutes),
-        testWeather
+    if (sortOption === 'congestion_low')
+      return (
+        calculateCongestion(a, algHour, weather) -
+        calculateCongestion(b, algHour, weather)
       )
-      const scoreB = calculateCongestion(
-        b,
-        getAlgorithmHour(testTimeInMinutes),
-        testWeather
-      )
-      return scoreA - scoreB
-    }
     if (sortOption === 'name') return a.name.localeCompare(b.name, 'ja')
     if (sortOption === 'distance_close' && userLocation) {
-      const distA = getDistanceFromLatLonInM(
-        userLocation.lat,
-        userLocation.lng,
-        Number(a.lat),
-        Number(a.lng)
+      return (
+        getDistanceFromLatLonInM(
+          userLocation.lat,
+          userLocation.lng,
+          Number(a.lat),
+          Number(a.lng)
+        ) -
+        getDistanceFromLatLonInM(
+          userLocation.lat,
+          userLocation.lng,
+          Number(b.lat),
+          Number(b.lng)
+        )
       )
-      const distB = getDistanceFromLatLonInM(
-        userLocation.lat,
-        userLocation.lng,
-        Number(b.lat),
-        Number(b.lng)
-      )
-      return distA - distB
     }
     return 0
   })
 
-  const generateDailyCongestionData = (
-    toilet: ToiletData,
-    currentAlgorithmHour: number,
-    currentWeather: string
-  ) => {
-    const data = []
-    const currentHourOnly = Math.floor(currentAlgorithmHour)
+  const weatherLabel =
+    weather === 'Sunny' ? '☀️ 晴れ' : weather === 'Rain' ? '☔ 雨' : '☁️ 曇り'
 
-    for (let h = 8; h <= 20; h++) {
-      const hourToCalculate = h === currentHourOnly ? currentAlgorithmHour : h
-      const score = calculateCongestion(toilet, hourToCalculate, currentWeather)
-      data.push({ hour: h, score: score })
-    }
-    return data
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100dvh',
+          color: '#AAA',
+          fontSize: 15,
+          fontFamily: "'Noto Sans JP', 'Hiragino Sans', system-ui",
+        }}
+      >
+        読み込み中...
+      </div>
+    )
   }
 
-  if (loading)
-    return (
-      <div className="p-8 text-center text-gray-500">データを読み込み中...</div>
-    )
-
   return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          📊 混雑予測・シミュレーター
-        </h1>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-4 grid md:grid-cols-2 gap-6">
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <label className="text-gray-700 font-bold text-lg flex items-center gap-2">
-                🕒 時間:{' '}
-                <span className="text-3xl font-extrabold text-blue-600">
-                  {formatTime(testTimeInMinutes)}
-                </span>
-              </label>
-              <button
-                onClick={resetToCurrentTime}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-xs transition-colors shadow-sm"
-              >
-                現在に戻す
-              </button>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="1425"
-              step="15"
-              value={testTimeInMinutes}
-              onChange={(e) => setTestTimeInMinutes(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
-          </div>
-
-          <div>
-            <label className="text-gray-700 font-bold text-lg flex items-center gap-2 mb-4">
-              ⛅ 天気:
-              <span
-                className={`text-xl font-extrabold ${testWeather === 'Sunny' ? 'text-orange-500' : testWeather === 'Rain' ? 'text-blue-500' : 'text-gray-500'}`}
-              >
-                {testWeather === 'Sunny'
-                  ? '晴れ'
-                  : testWeather === 'Rain'
-                    ? '雨'
-                    : '曇り'}
-              </span>
-            </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTestWeather('Sunny')}
-                className={`flex-1 py-2 rounded-lg font-bold transition-colors ${testWeather === 'Sunny' ? 'bg-orange-100 text-orange-700 border-2 border-orange-400' : 'bg-gray-50 text-gray-500 border-2 border-transparent'}`}
-              >
-                ☀️ 晴れ
-              </button>
-              <button
-                onClick={() => setTestWeather('Cloudy')}
-                className={`flex-1 py-2 rounded-lg font-bold transition-colors ${testWeather === 'Cloudy' ? 'bg-gray-200 text-gray-700 border-2 border-gray-400' : 'bg-gray-50 text-gray-500 border-2 border-transparent'}`}
-              >
-                ☁️ 曇り
-              </button>
-              <button
-                onClick={() => setTestWeather('Rain')}
-                className={`flex-1 py-2 rounded-lg font-bold transition-colors ${testWeather === 'Rain' ? 'bg-blue-100 text-blue-700 border-2 border-blue-400' : 'bg-gray-50 text-gray-500 border-2 border-transparent'}`}
-              >
-                ☔ 雨
-              </button>
-            </div>
-          </div>
+    <div
+      style={{
+        minHeight: '100dvh',
+        background: '#F5F5F7',
+        fontFamily: "'Noto Sans JP', 'Hiragino Sans', system-ui",
+      }}
+    >
+      {/* ── Fixed header ──────────────────────────────── */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 200,
+          background: 'rgba(255,255,255,.97)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0,0,0,.08)',
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 20 }}>🚽</span>
+        <div
+          style={{
+            width: 22,
+            height: 22,
+            background: BRAND,
+            borderRadius: 5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 700,
+          }}
+        >
+          名
         </div>
+        <span
+          style={{
+            fontSize: 17,
+            fontWeight: 700,
+            color: '#111',
+            letterSpacing: '-.3px',
+            flex: 1,
+          }}
+        >
+          混雑予測
+        </span>
+        {/* 設定トグル */}
+        <button
+          onClick={() => setControlsOpen((p) => !p)}
+          style={{
+            padding: '7px 14px',
+            borderRadius: 20,
+            border: `1.5px solid ${controlsOpen ? BRAND : '#C6C6C6'}`,
+            background: controlsOpen ? '#FBF0F4' : '#fff',
+            color: controlsOpen ? BRAND : '#333',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+              stroke={controlsOpen ? BRAND : '#555'}
+              strokeWidth="2"
+            />
+            <path
+              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+              stroke={controlsOpen ? BRAND : '#555'}
+              strokeWidth="2"
+            />
+          </svg>
+          設定
+        </button>
+      </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-8">
-          <div className="flex justify-between items-center mb-4 border-b pb-3">
-            <h2 className="font-bold text-gray-700 flex items-center gap-2">
-              ⚙️ 絞り込み ＆ 並び替え
-            </h2>
-            <button
-              onClick={resetFilters}
-              className="text-sm text-blue-600 hover:text-blue-800 font-bold"
-            >
-              ↻ 条件をリセット
-            </button>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-500 mb-2">
-                ▼ 表示順
-              </label>
-              <div className="flex gap-2">
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-bold"
+      {/* ── Scrollable content ─────────────────────────── */}
+      <div style={{ paddingTop: 66, paddingBottom: 95 }}>
+        {/* Controls panel */}
+        {controlsOpen && (
+          <div
+            style={{
+              background: '#fff',
+              margin: '12px 12px 8px',
+              borderRadius: 20,
+              padding: '18px',
+              boxShadow: '0 2px 12px rgba(0,0,0,.08)',
+              animation: 'slideUp .25s ease',
+            }}
+          >
+            {/* Time slider */}
+            <div style={{ marginBottom: 18 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 10,
+                }}
+              >
+                <span
+                  style={{ fontSize: 13, fontWeight: 600, color: '#666' }}
                 >
-                  <option value="default">デフォルト</option>
-                  <option value="congestion_low">
-                    🟢 混雑度が低い順 (空いてる順)
-                  </option>
-                  <option value="rating_high">⭐ 評価が高い順</option>
-                  <option value="name">🏢 建物名順 (あいうえお順)</option>
-                  {userLocation && (
-                    <option value="distance_close">📍 現在地から近い順</option>
-                  )}
-                </select>
+                  🕒 時間
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: '#111',
+                      letterSpacing: '-1px',
+                    }}
+                  >
+                    {formatTime(timeInMinutes)}
+                  </span>
+                  <button
+                    onClick={resetToNow}
+                    style={{
+                      padding: '5px 10px',
+                      background: '#F0F0F0',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: '#555',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontWeight: 600,
+                    }}
+                  >
+                    現在に戻す
+                  </button>
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1425"
+                step="15"
+                value={timeInMinutes}
+                onChange={(e) => setTimeInMinutes(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  accentColor: BRAND,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
 
+            {/* Weather */}
+            <div style={{ marginBottom: 18 }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#666',
+                  marginBottom: 8,
+                }}
+              >
+                ⛅ 天気
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { v: 'Sunny', label: '☀️ 晴れ', color: '#E8940F' },
+                  { v: 'Cloudy', label: '☁️ 曇り', color: '#888' },
+                  { v: 'Rain', label: '☔ 雨', color: '#4A92D9' },
+                ].map(({ v, label, color }) => (
+                  <button
+                    key={v}
+                    onClick={() => setWeather(v)}
+                    style={{
+                      flex: 1,
+                      padding: '10px 4px',
+                      borderRadius: 12,
+                      border: `1.5px solid ${weather === v ? color : '#EAEAEA'}`,
+                      background: weather === v ? `${color}18` : '#FAFAFA',
+                      color: weather === v ? color : '#666',
+                      fontSize: 13,
+                      fontWeight: weather === v ? 700 : 500,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div style={{ marginBottom: 14 }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#666',
+                  marginBottom: 8,
+                }}
+              >
+                並び替え
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  { v: 'default', label: 'デフォルト' },
+                  { v: 'congestion_low', label: '🟢 空いてる順' },
+                  { v: 'rating_high', label: '⭐ 評価順' },
+                  { v: 'name', label: '🏢 名前順' },
+                  ...(userLocation
+                    ? [{ v: 'distance_close', label: '📍 近い順' }]
+                    : []),
+                ].map(({ v, label }) => (
+                  <button
+                    key={v}
+                    onClick={() => setSortOption(v)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: 20,
+                      border: `1.5px solid ${sortOption === v ? BRAND : '#EAEAEA'}`,
+                      background: sortOption === v ? '#FBF0F4' : '#FAFAFA',
+                      color: sortOption === v ? BRAND : '#666',
+                      fontSize: 12,
+                      fontWeight: sortOption === v ? 700 : 500,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div>
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: '#666',
+                  marginBottom: 8,
+                }}
+              >
+                絞り込み
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  { v: 'all', label: '🚻 すべて' },
+                  { v: 'men', label: '🚹 男性用' },
+                  { v: 'women', label: '🚺 女性用' },
+                  { v: 'neutral', label: '⚧️ GNトイレ' },
+                ].map(({ v, label }) => (
+                  <button
+                    key={v}
+                    onClick={() => setFilterGender(v)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: 20,
+                      border: `1.5px solid ${filterGender === v ? GREEN : '#EAEAEA'}`,
+                      background: filterGender === v ? '#E5F8EF' : '#FAFAFA',
+                      color: filterGender === v ? '#148E5A' : '#666',
+                      fontSize: 12,
+                      fontWeight: filterGender === v ? 700 : 500,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setFilterWashlet((p) => !p)}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: 20,
+                    border: `1.5px solid ${filterWashlet ? GREEN : '#EAEAEA'}`,
+                    background: filterWashlet ? '#E5F8EF' : '#FAFAFA',
+                    color: filterWashlet ? '#148E5A' : '#666',
+                    fontSize: 12,
+                    fontWeight: filterWashlet ? 700 : 500,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all .15s',
+                  }}
+                >
+                  💦 ウォシュレット
+                </button>
+                <button
+                  onClick={() => setFilterMultipurpose((p) => !p)}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: 20,
+                    border: `1.5px solid ${filterMultipurpose ? GREEN : '#EAEAEA'}`,
+                    background: filterMultipurpose ? '#E5F8EF' : '#FAFAFA',
+                    color: filterMultipurpose ? '#148E5A' : '#666',
+                    fontSize: 12,
+                    fontWeight: filterMultipurpose ? 700 : 500,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all .15s',
+                  }}
+                >
+                  ♿ 多目的
+                </button>
                 <button
                   onClick={handleGetLocation}
-                  className={`shrink-0 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${userLocation ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  style={{
+                    padding: '7px 12px',
+                    borderRadius: 20,
+                    border: `1.5px solid ${userLocation ? GREEN : '#EAEAEA'}`,
+                    background: userLocation ? '#E5F8EF' : '#FAFAFA',
+                    color: userLocation ? '#148E5A' : '#666',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
                 >
-                  {userLocation ? '📍 取得済' : '📍 現在地取得'}
+                  📍 {userLocation ? '現在地取得済' : '現在地取得'}
                 </button>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-500 mb-2">
-                ▼ 設備で絞り込む
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <select
-                  value={filterGender}
-                  onChange={(e) => setFilterGender(e.target.value)}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2 font-bold"
-                >
-                  <option value="all">🚻 すべての対象</option>
-                  <option value="men">🚹 男子トイレを含む</option>
-                  <option value="women">🚺 女子トイレを含む</option>
-                  <option value="neutral">🌈 だれでもトイレ</option>
-                </select>
-
-                <label className="flex items-center gap-1 cursor-pointer bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100">
-                  <input
-                    type="checkbox"
-                    checked={filterWashlet}
-                    onChange={(e) => setFilterWashlet(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  🚿 ウォシュレット
-                </label>
-
-                <label className="flex items-center gap-1 cursor-pointer bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100">
-                  <input
-                    type="checkbox"
-                    checked={filterMultipurpose}
-                    onChange={(e) => setFilterMultipurpose(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  ♿ 多目的
-                </label>
-              </div>
-            </div>
           </div>
+        )}
+
+        {/* Summary bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 18px 6px',
+          }}
+        >
+          <span style={{ fontSize: 13, color: '#888', fontWeight: 500 }}>
+            <span style={{ color: BRAND, fontWeight: 700 }}>
+              {displayed.length}
+            </span>
+            件 ·{' '}
+            <span style={{ color: '#555' }}>
+              {formatTime(timeInMinutes)} · {weatherLabel}
+            </span>
+          </span>
         </div>
 
-        <div className="text-sm text-gray-500 mb-2 font-bold">
-          該当: {displayedToilets.length} 件
-        </div>
-
-        <div className="grid gap-4">
-          {displayedToilets.length === 0 ? (
-            <div className="text-center p-10 bg-white rounded-xl border border-gray-200 text-gray-500">
-              条件に合うトイレが見つかりませんでした。
+        {/* Toilet list */}
+        <div style={{ padding: '0 12px 8px' }}>
+          {displayed.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                color: '#AAA',
+                fontSize: 15,
+              }}
+            >
+              条件に合うトイレが見つかりませんでした
             </div>
           ) : (
-            displayedToilets.map((toilet) => {
-              const currentAlgorithmHour = getAlgorithmHour(testTimeInMinutes)
-              const score = calculateCongestion(
-                toilet,
-                currentAlgorithmHour,
-                testWeather
-              )
-              const status = getCongestionStatus(score)
-              const isExpanded = expandedToiletId === toilet.id
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {displayed.map((toilet) => {
+                const score = calculateCongestion(toilet, algHour, weather)
+                const status = getCongestionStatus(score)
+                const isExpanded = expandedId === toilet.id
+                const cColor = congestionColor(score)
+                const cLabel = congestionLabel(score)
 
-              let distanceText = ''
-              if (userLocation) {
-                const dist = getDistanceFromLatLonInM(
-                  userLocation.lat,
-                  userLocation.lng,
-                  Number(toilet.lat),
-                  Number(toilet.lng)
-                )
-                distanceText =
-                  dist < 1000
-                    ? `${Math.round(dist)}m`
-                    : `${(dist / 1000).toFixed(1)}km`
-              }
-
-              const dailyData = isExpanded
-                ? generateDailyCongestionData(
-                    toilet,
-                    currentAlgorithmHour,
-                    testWeather
+                let distText = ''
+                if (userLocation) {
+                  const d = getDistanceFromLatLonInM(
+                    userLocation.lat,
+                    userLocation.lng,
+                    Number(toilet.lat),
+                    Number(toilet.lng)
                   )
-                : []
+                  distText =
+                    d < 1000
+                      ? `${Math.round(d)}m`
+                      : `${(d / 1000).toFixed(1)}km`
+                }
 
-              return (
-                <div
-                  key={toilet.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:border-blue-300 transition-all cursor-pointer overflow-hidden"
-                  onClick={() =>
-                    setExpandedToiletId(isExpanded ? null : toilet.id)
-                  }
-                >
-                  <div className="p-5 flex justify-between items-center">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                          {formatFloor(toilet.floor)}
-                        </span>
-                        <h3 className="font-bold text-gray-800 text-lg">
-                          {toilet.name}
-                        </h3>
+                const dailyData = isExpanded
+                  ? Array.from({ length: 13 }, (_, i) => i + 8).map((h) => ({
+                      hour: h,
+                      score: calculateCongestion(
+                        toilet,
+                        h === Math.floor(algHour) ? algHour : h,
+                        weather
+                      ),
+                    }))
+                  : []
 
-                        {/* 🌟 修正：!= null を追加して安全に星を表示！ */}
-                        {toilet.average_rating != null &&
-                          toilet.average_rating > 0 && (
-                            <span className="text-sm font-bold text-yellow-500 flex items-center">
-                              ★ {toilet.average_rating.toFixed(1)}{' '}
-                              <span className="text-xs text-gray-400 ml-1">
-                                ({toilet.review_count})
-                              </span>
-                            </span>
-                          )}
-                      </div>
-
-                      <p className="text-xs text-gray-400 flex items-center gap-2">
-                        {distanceText && (
-                          <span className="font-bold text-blue-600">
-                            📍 距離: {distanceText}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <span
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold ${status.bg} ${status.color} shadow-sm`}
+                return (
+                  <div
+                    key={toilet.id}
+                    style={{
+                      background: '#fff',
+                      borderRadius: 18,
+                      boxShadow: '0 2px 10px rgba(0,0,0,.07)',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() =>
+                      setExpandedId(isExpanded ? null : toilet.id)
+                    }
+                  >
+                    {/* Card header */}
+                    <div style={{ padding: '14px 16px 10px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
                       >
-                        {status.text} ({score}%)
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="w-full bg-gray-100 h-1.5">
-                    <div
-                      className={`h-1.5 ${score >= 80 ? 'bg-red-500' : score >= 50 ? 'bg-orange-500' : 'bg-green-500'}`}
-                      style={{
-                        width: `${score}%`,
-                        transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      }}
-                    ></div>
-                  </div>
-
-                  {isExpanded && (
-                    <div
-                      className="bg-gray-50 p-5 border-t border-gray-100 grid gap-4 md:grid-cols-2 animate-fadeIn"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div>
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                          🚽 トイレ設備詳細
-                        </h4>
-                        <ul className="text-sm text-gray-600 space-y-1 bg-white p-3 rounded-xl border border-gray-200">
-                          <li>
-                            🔹 洋式便器:{' '}
-                            <span className="font-bold text-gray-800">
-                              {toilet.western_style_count || 0} 個
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: 5,
+                              marginBottom: 6,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <span
+                              style={{
+                                background: '#F2F2F2',
+                                color: '#777',
+                                fontSize: 11,
+                                padding: '2px 7px',
+                                borderRadius: 5,
+                              }}
+                            >
+                              {formatFloor(toilet.floor)}
                             </span>
-                          </li>
-                          <li>
-                            🔹 和式便器:{' '}
-                            <span className="font-bold text-gray-800">
-                              {toilet.japanese_style_count || 0} 個
-                            </span>
-                          </li>
-                          <li>
-                            🔹 小便器 (男性用):{' '}
-                            <span className="font-bold text-gray-800">
-                              {toilet.urinal_count || 0} 個
-                            </span>
-                          </li>
-                          <li className="pt-1 mt-1 border-t border-gray-100 text-xs text-blue-600 flex gap-2">
-                            {toilet.has_washlet && (
-                              <span>✓ ウォシュレット</span>
+                            {(toilet.average_rating ?? 0) > 0 && (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: '#F5A623',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                ★{(toilet.average_rating ?? 0).toFixed(1)}{' '}
+                                <span style={{ color: '#BBB' }}>
+                                  ({toilet.review_count ?? 0})
+                                </span>
+                              </span>
                             )}
-                            {toilet.has_otohime && <span>✓ 音姫</span>}
-                            {toilet.is_multipurpose && <span>✓ 多目的</span>}
-                          </li>
-                        </ul>
+                            {distText && (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: '#4A92D9',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                📍 {distText}
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            style={{
+                              fontSize: 15,
+                              fontWeight: 700,
+                              color: '#111',
+                              margin: 0,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {toilet.name}
+                          </p>
+                        </div>
+
+                        {/* Congestion badge */}
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              padding: '6px 12px',
+                              borderRadius: 20,
+                              background: `${cColor}18`,
+                              color: cColor,
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                background: cColor,
+                                display: 'inline-block',
+                              }}
+                            />
+                            {cLabel}
+                          </span>
+                        </div>
                       </div>
+                    </div>
 
-                      <div className="flex flex-col justify-between">
+                    {/* Congestion bar */}
+                    <div style={{ height: 4, background: '#F0F0F0' }}>
+                      <div
+                        style={{
+                          height: 4,
+                          width: `${score}%`,
+                          background: cColor,
+                          transition: 'width .4s cubic-bezier(.4,0,.2,1)',
+                          borderRadius: '0 4px 4px 0',
+                        }}
+                      />
+                    </div>
+
+                    {/* Expanded section */}
+                    {isExpanded && (
+                      <div
+                        style={{
+                          background: '#FAFAFA',
+                          padding: '14px 16px',
+                          borderTop: '1px solid #F0F0F0',
+                          animation: 'slideUp .2s ease',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Facilities */}
+                        <div style={{ marginBottom: 14 }}>
+                          <p
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: '#AAA',
+                              letterSpacing: '.06em',
+                              marginBottom: 6,
+                            }}
+                          >
+                            設備
+                          </p>
+                          <div
+                            style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}
+                          >
+                            {[
+                              {
+                                icon: '🚽',
+                                label: `洋式×${toilet.western_style_count ?? 0}`,
+                                show: true,
+                              },
+                              {
+                                icon: '🪑',
+                                label: `和式×${toilet.japanese_style_count ?? 0}`,
+                                show: (toilet.japanese_style_count ?? 0) > 0,
+                              },
+                              {
+                                icon: '💦',
+                                label: 'ウォシュレット',
+                                show: !!toilet.has_washlet,
+                              },
+                              {
+                                icon: '♿',
+                                label: '多目的',
+                                show: !!toilet.is_multipurpose,
+                              },
+                              {
+                                icon: '🎵',
+                                label: '乙姫',
+                                show: !!toilet.has_otohime,
+                              },
+                            ]
+                              .filter((f) => f.show)
+                              .map((f, i) => (
+                                <span
+                                  key={i}
+                                  style={{
+                                    fontSize: 12,
+                                    padding: '4px 10px',
+                                    background: '#fff',
+                                    borderRadius: 12,
+                                    color: '#444',
+                                    border: '1px solid #EAEAEA',
+                                  }}
+                                >
+                                  {f.icon} {f.label}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+
+                        {/* Hourly chart */}
                         <div>
-                          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                            📊 時間帯の混雑傾向 (8時〜20時)
-                          </h4>
-
-                          <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-end justify-between h-32 gap-1">
-                            {dailyData.map((data) => {
-                              const currentHourOnly = Math.floor(
-                                testTimeInMinutes / 60
-                              )
-                              const isCurrentHour =
-                                data.hour === currentHourOnly
-
+                          <p
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: '#AAA',
+                              letterSpacing: '.06em',
+                              marginBottom: 6,
+                            }}
+                          >
+                            時間帯別混雑予測 (8〜20時)
+                          </p>
+                          <div
+                            style={{
+                              background: '#fff',
+                              borderRadius: 12,
+                              padding: '10px 10px 6px',
+                              display: 'flex',
+                              alignItems: 'flex-end',
+                              justifyContent: 'space-between',
+                              height: 90,
+                              border: '1px solid #EAEAEA',
+                            }}
+                          >
+                            {dailyData.map((d) => {
+                              const isCurrent =
+                                d.hour === Math.floor(algHour)
+                              const barColor = isCurrent
+                                ? BRAND
+                                : congestionColor(d.score)
                               return (
                                 <div
-                                  key={data.hour}
-                                  className="flex flex-col items-center justify-end flex-1 h-full group relative"
+                                  key={d.hour}
+                                  style={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-end',
+                                    height: '100%',
+                                    gap: 2,
+                                  }}
                                 >
-                                  <div className="w-full flex-1 flex items-end relative">
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-10">
-                                      {isCurrentHour
-                                        ? formatTime(testTimeInMinutes)
-                                        : `${data.hour}:00`}{' '}
-                                      ～ , {data.score}%
-                                    </div>
-
-                                    <div
-                                      className={`w-full rounded-t-sm transition-all duration-300 ${isCurrentHour ? 'bg-blue-500' : 'bg-blue-200'}`}
-                                      style={{
-                                        height: `${Math.max(5, data.score)}%`,
-                                      }}
-                                    ></div>
-                                  </div>
-
-                                  <span className="text-[10px] text-gray-400 mt-1 font-mono leading-none h-3">
-                                    {data.hour % 2 === 0
-                                      ? `${data.hour}`
-                                      : '\u00A0'}
+                                  <div
+                                    style={{
+                                      width: '70%',
+                                      background: barColor,
+                                      opacity: isCurrent ? 1 : 0.5,
+                                      borderRadius: '3px 3px 0 0',
+                                      height: `${Math.max(4, d.score)}%`,
+                                      transition: 'height .3s ease',
+                                    }}
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: 9,
+                                      color: isCurrent ? BRAND : '#CCC',
+                                      fontWeight: isCurrent ? 700 : 400,
+                                    }}
+                                  >
+                                    {d.hour % 2 === 0 ? d.hour : ''}
                                   </span>
                                 </div>
                               )
                             })}
                           </div>
                         </div>
-
-                        <Link
-                          href={`/toilets/${toilet.id}`}
-                          className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors text-center shadow-md block"
-                        >
-                          🔍 口コミ・マップを詳しく見る
-                        </Link>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>
-    </main>
+
+      <SharedBottomNav />
+    </div>
   )
 }

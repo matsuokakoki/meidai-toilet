@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import Link from 'next/link'
 import {
   calculateCongestion,
   getDistanceFromLatLonInM,
 } from '@/utils/algorithm'
 import type { SupabaseToiletWithReviews } from './ToiletMapApp'
+import SharedBottomNav from './SharedBottomNav'
 
 // ── Brand / theme ──────────────────────────────────────────────────────────────
 const BRAND = '#C41E5A'
@@ -212,92 +212,6 @@ const Ic = {
         d="M12 2v3M12 19v3M2 12h3M19 12h3"
         stroke="#4A92D9"
         strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  ),
-  navMap: (on: boolean) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M9 4L3 7v14l6-3 6 3 6-3V4l-6 3-6-3z"
-        fill={on ? BRAND : 'none'}
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <line
-        x1="9"
-        y1="4"
-        x2="9"
-        y2="18"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-      <line
-        x1="15"
-        y1="7"
-        x2="15"
-        y2="21"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-    </svg>
-  ),
-  navBld: (on: boolean) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect
-        x="3"
-        y="3"
-        width="18"
-        height="18"
-        rx="2"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-      <path
-        d="M9 3v18M15 3v18M3 9h18M3 15h18"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-    </svg>
-  ),
-  navCrowd: (on: boolean) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle
-        cx="9"
-        cy="7"
-        r="2.5"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-      <circle
-        cx="15"
-        cy="7"
-        r="2.5"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-      <path
-        d="M4 19v-1c0-2.5 2.5-4 5-4h6c2.5 0 5 1.5 5 4v1"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  ),
-  navUser: (on: boolean) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle
-        cx="12"
-        cy="8"
-        r="3.5"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
-      />
-      <path
-        d="M4 20c0-3.8 3.6-6 8-6s8 2.2 8 6"
-        stroke={on ? BRAND : '#C0C0C0'}
-        strokeWidth="1.5"
         strokeLinecap="round"
       />
     </svg>
@@ -1432,60 +1346,6 @@ function AppHeader({
   )
 }
 
-// ── BottomNav ──────────────────────────────────────────────────────────────────
-function BottomNav() {
-  const items = [
-    { id: 'map', label: 'マップ', icon: Ic.navMap, href: '/' },
-    { id: 'bld', label: '建物', icon: Ic.navBld, href: '/buildings' },
-    { id: 'crowd', label: '混雑予測', icon: Ic.navCrowd, href: '/congestion' },
-    { id: 'user', label: 'マイページ', icon: Ic.navUser, href: '/mypage' },
-  ]
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 83,
-        background: 'rgba(255,255,255,.97)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        borderTop: '1px solid rgba(0,0,0,.07)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        paddingTop: 12,
-        zIndex: 200,
-      }}
-    >
-      {items.map((it) => (
-        <Link
-          key={it.id}
-          href={it.href}
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 3,
-            textDecoration: 'none',
-          }}
-        >
-          {it.icon(it.id === 'map')}
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: it.id === 'map' ? 600 : 400,
-              color: it.id === 'map' ? BRAND : '#C0C0C0',
-            }}
-          >
-            {it.label}
-          </span>
-        </Link>
-      ))}
-    </div>
-  )
-}
 
 // ── Main MapV4App ──────────────────────────────────────────────────────────────
 export default function MapV4App({
@@ -1944,7 +1804,7 @@ export default function MapV4App({
         />
       )}
 
-      <BottomNav />
+      <SharedBottomNav />
     </div>
   )
 }
