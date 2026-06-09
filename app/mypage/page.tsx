@@ -326,10 +326,23 @@ export default function MyPage() {
                 🚽
               </div>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 2 }}>
+                <p
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: '#111',
+                    marginBottom: 2,
+                  }}
+                >
                   ゲストユーザー
                 </p>
-                <p style={{ fontSize: 12, color: '#AAA', fontFamily: 'monospace' }}>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: '#AAA',
+                    fontFamily: 'monospace',
+                  }}
+                >
                   ID: {userId}
                 </p>
               </div>
@@ -359,7 +372,9 @@ export default function MyPage() {
                     </p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
                     {favorites.map((fav) => (
                       <div
                         key={fav.id}
@@ -422,7 +437,12 @@ export default function MyPage() {
                             flexShrink: 0,
                           }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
                             <path
                               d="M18 6L6 18M6 6l12 12"
                               stroke="#AAA"
@@ -605,7 +625,9 @@ export default function MyPage() {
                     <p style={{ fontSize: 15 }}>まだ口コミがありません</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
                     {reviews.map((rev) => (
                       <div
                         key={rev.id}

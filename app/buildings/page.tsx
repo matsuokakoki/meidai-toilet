@@ -307,10 +307,14 @@ export default function BuildingsPage() {
                   条件に合うトイレが見つかりませんでした
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                >
                   {filtered.map((t) => {
-                    const [gi, gl] =
-                      GENDER_LABELS[t.gender ?? 'all'] ?? ['🚻', '共用']
+                    const [gi, gl] = GENDER_LABELS[t.gender ?? 'all'] ?? [
+                      '🚻',
+                      '共用',
+                    ]
                     const isOpen = isCurrentlyOpen(t.opening_hours)
 
                     return (
@@ -340,7 +344,11 @@ export default function BuildingsPage() {
                             }}
                           >
                             <div
-                              style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}
+                              style={{
+                                display: 'flex',
+                                gap: 5,
+                                flexWrap: 'wrap',
+                              }}
                             >
                               <span
                                 style={{
@@ -425,7 +433,11 @@ export default function BuildingsPage() {
                             }}
                           >
                             <div
-                              style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}
+                              style={{
+                                display: 'flex',
+                                gap: 5,
+                                flexWrap: 'wrap',
+                              }}
                             >
                               {t.has_washlet && (
                                 <span

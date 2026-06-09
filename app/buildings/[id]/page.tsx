@@ -2,7 +2,12 @@
 
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getToiletById, addFavorite, removeFavoriteByToilet, isFavorite } from '@/utils/supabase'
+import {
+  getToiletById,
+  addFavorite,
+  removeFavoriteByToilet,
+  isFavorite,
+} from '@/utils/supabase'
 import SharedBottomNav from '@/components/SharedBottomNav'
 
 const BRAND = '#C41E5A'

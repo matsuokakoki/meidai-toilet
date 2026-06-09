@@ -1346,7 +1346,6 @@ function AppHeader({
   )
 }
 
-
 // ── Main MapV4App ──────────────────────────────────────────────────────────────
 export default function MapV4App({
   toilets: rawToilets,

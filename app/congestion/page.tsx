@@ -91,7 +91,9 @@ export default function CongestionPage() {
 
   const resetToNow = () => {
     const now = new Date()
-    setTimeInMinutes(now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15)
+    setTimeInMinutes(
+      now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15
+    )
   }
 
   let displayed = [...toilets]
@@ -268,9 +270,7 @@ export default function CongestionPage() {
                   marginBottom: 10,
                 }}
               >
-                <span
-                  style={{ fontSize: 13, fontWeight: 600, color: '#666' }}
-                >
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#666' }}>
                   🕒 時間
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -572,9 +572,7 @@ export default function CongestionPage() {
                       overflow: 'hidden',
                       cursor: 'pointer',
                     }}
-                    onClick={() =>
-                      setExpandedId(isExpanded ? null : toilet.id)
-                    }
+                    onClick={() => setExpandedId(isExpanded ? null : toilet.id)}
                   >
                     {/* Card header */}
                     <div style={{ padding: '14px 16px 10px' }}>
@@ -713,7 +711,11 @@ export default function CongestionPage() {
                             設備
                           </p>
                           <div
-                            style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}
+                            style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 5,
+                            }}
                           >
                             {[
                               {
@@ -787,8 +789,7 @@ export default function CongestionPage() {
                             }}
                           >
                             {dailyData.map((d) => {
-                              const isCurrent =
-                                d.hour === Math.floor(algHour)
+                              const isCurrent = d.hour === Math.floor(algHour)
                               const barColor = isCurrent
                                 ? BRAND
                                 : congestionColor(d.score)
