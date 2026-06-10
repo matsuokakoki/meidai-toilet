@@ -1,11 +1,15 @@
-// app/page.tsx
-// app/page.tsx (上部のimport部分)
 import { supabase } from '@/utils/supabase'
-import MapWrapper, { MapToilet } from '@/components/MapWrapper' // 🌟 型も一緒に読み込む
+import MapV4App from '@/components/MapV4App'
+import type { SupabaseToiletWithReviews } from '@/components/ToiletMapApp'
+
+export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  // 1. サーバー側でSupabaseからトイレ一覧を取得する
-  const { data: toilets, error } = await supabase.from('toilets').select('*')
+  const { data: toilets, error } = await supabase
+    .from('toilets')
+    .select(
+      '*, reviews(id, rating, cleanliness_rating, comment, user_id, created_at)'
+    )
 
   if (error) {
     return (
@@ -15,22 +19,23 @@ export default async function Home() {
     )
   }
 
-  // 2. 取得したデータをクライアントに渡す
-  return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            🚽 名大トイレナビ
-          </h1>
-          <p className="text-gray-500 mt-1">
-            一番近くて綺麗なトイレを瞬時に見つける
-          </p>
-        </header>
+  const enriched: SupabaseToiletWithReviews[] = (toilets ?? []).map((t) => {
+    const reviews = (t.reviews ?? []) as SupabaseToiletWithReviews['reviews']
+    const avg =
+      reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + (r.rating ?? 0), 0) / reviews.length
+        : 0
+    return {
+      ...t,
+      average_rating: avg,
+      review_count: reviews.length,
+      reviews,
+    } as SupabaseToiletWithReviews
+  })
 
-        {/* 🌟 as any をやめて、as unknown as MapToilet[] という正しい変換ルールにする！ */}
-        <MapWrapper toilets={(toilets as unknown as MapToilet[]) || []} />
-      </div>
+  return (
+    <main style={{ width: '100vw', height: '100dvh', overflow: 'hidden' }}>
+      <MapV4App toilets={enriched} />
     </main>
   )
 }
