@@ -747,15 +747,23 @@ function FilterPanel({
 // ── ToiletPopup ────────────────────────────────────────────────────────────────
 function ToiletPopup({
   t,
+  userPos,
   isFav,
   onFavorite,
   onClose,
 }: {
   t: UiToilet
   isFav: boolean
+  userPos: { lat: number; lng: number } | null
   onFavorite: () => void
   onClose: () => void
 }) {
+  const liveDistance = userPos
+    ? Math.round(
+        getDistanceFromLatLonInM(userPos.lat, userPos.lng, t.lat, t.lng)
+      )
+    : 0
+
   const c = CONGESTION[t.congestion]
   const [gi, gl] = GENDER_INFO[t.gender] ?? ['🚻', '男女共用']
 
@@ -972,7 +980,8 @@ function ToiletPopup({
                 }}
               >
                 {Ic.walk('#4A92D9')}
-                {t.distance > 0 ? `${t.distance}m` : '—'}
+                {/* {t.distance > 0 ? `${t.distance}m` : '計測中…'} */}
+                {userPos ? `${liveDistance}m` : 'GPSをオンにしてください'}
               </span>
             ),
           },
@@ -1080,6 +1089,11 @@ function ToiletPopup({
       {/* CTAs */}
       <div style={{ padding: '0 18px 24px', display: 'flex', gap: 10 }}>
         <button
+          onClick={() => {
+            // Googleマップの「現在地から目的地(緯度,経度)への徒歩ルート」を開くURL
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}&travelmode=walking`
+            window.open(url, '_blank')
+          }}
           style={{
             flex: 1,
             padding: '15px',
@@ -1446,24 +1460,34 @@ export default function MapV4App({
       } satisfies UiToilet
     })
 
+  const filtered = applyFilters(toilets, filters)
+  const filteredSet = new Set(filtered.map((t) => t.id))
+
+  toilets.forEach((t) => {
+    t.isNearest = false
+  })
+
   // Mark nearest
-  if (userPos && toilets.length > 0) {
-    const ni = toilets.reduce(
-      (mi, t, i) => (t.distance < (toilets[mi]?.distance ?? Infinity) ? i : mi),
+  if (userPos && filtered.length > 0) {
+    const ni = filtered.reduce(
+      (mi, t, i) =>
+        t.distance < (filtered[mi]?.distance ?? Infinity) ? i : mi,
       0
     )
-    toilets.forEach((t, i) => {
-      t.isNearest = i === ni
+
+    const nearestId = filtered[ni].id
+
+    toilets.forEach((t) => {
+      t.isNearest = t.id === nearestId
     })
   }
 
-  const filtered = applyFilters(toilets, filters)
-  const filteredSet = new Set(filtered.map((t) => t.id))
   const activeCount = countActive(filters)
 
   // ── Initialize MapLibre ──────────────────────────────────────────────────────
   useEffect(() => {
     if (map.current || !mapContainer.current) return
+    const currentMarkers = markerMap.current
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -1586,6 +1610,69 @@ export default function MapV4App({
       )
     })
   }, [selected?.id, filters, userPos])
+
+  // ── 🌟 ルート案内（点線）を描画する処理（強化版） ────────────────────────────────────────
+  useEffect(() => {
+    const m = map.current
+    // 地図、現在地、トイレリストが揃っているかチェック
+    if (!m || !userPos || toilets.length === 0) return
+
+    const drawRoute = () => {
+      // 1. 最寄りトイレを探す
+      const nearest = toilets.find((t) => t.isNearest)
+      if (!nearest) {
+        console.log('最寄りトイレが見つかりません')
+        return
+      }
+
+      console.log(`ルート描画開始: ${nearest.name} まで`)
+
+      const sourceId = 'route-line-source'
+      const layerId = 'route-line-layer'
+
+      const geojson = {
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: [
+            [userPos.lng, userPos.lat],
+            [nearest.lng, nearest.lat],
+          ],
+        },
+      }
+
+      // 2. 既存のレイヤーとソースがあれば一度消して作り直す（確実性を高めるため）
+      try {
+        if (m.getLayer(layerId)) m.removeLayer(layerId)
+        if (m.getSource(sourceId)) m.removeSource(sourceId)
+
+        m.addSource(sourceId, { type: 'geojson', data: geojson })
+        m.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': BRAND,
+            'line-width': 5, // 少し太くして見やすくします
+            'line-dasharray': [2, 1],
+            'line-opacity': 0.8,
+          },
+        })
+      } catch (e) {
+        console.error('ルート描画中にエラーが発生しました:', e)
+      }
+    }
+
+    // 地図がロード済みなら即実行、未ロードならロード完了を待つ
+    if (m.loaded()) {
+      drawRoute()
+    } else {
+      m.once('load', drawRoute)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPos, filtered.map((t) => t.id).join(',')]) // 🌟 依存関係を工夫して確実に更新
 
   // ── User geolocation ─────────────────────────────────────────────────────────
   const locateUser = () => {
@@ -1785,6 +1872,7 @@ export default function MapV4App({
       {selected && (
         <ToiletPopup
           t={selected}
+          userPos={userPos}
           isFav={favorites.has(selected.id)}
           onFavorite={() => toggleFav(selected.id)}
           onClose={() => setSelected(null)}

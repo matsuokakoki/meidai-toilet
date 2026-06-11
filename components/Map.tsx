@@ -66,6 +66,53 @@ export default function MapComponent({ toilets }: { toilets: MapToilet[] }) {
         })
         console.log('一番近いトイレのID:', nearestId) // 結果をコンソールに表示
 
+        const nearestToilet = toilets.find((t) => t.id === nearestId)
+
+        // 🌟 安全チェック：最寄りが見つかった場合のみ線とピンを処理する
+        if (
+          nearestToilet &&
+          nearestToilet.lng !== undefined &&
+          nearestToilet.lat !== undefined
+        ) {
+          // すでに古い線がある場合は一旦消す（再計算用）
+          if (map.current?.getLayer('route-line')) {
+            map.current.removeLayer('route-line')
+            map.current.removeSource('route-line')
+          }
+
+          // 直線のデータを作成
+          map.current?.addSource('route-line', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  [longitude, latitude], // 出発点：現在地
+                  [nearestToilet.lng, nearestToilet.lat], // 到着点：最寄り
+                ],
+              },
+            },
+          })
+
+          // 地図に線を描画する設定
+          map.current?.addLayer({
+            id: 'route-line',
+            type: 'line',
+            source: 'route-line',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#ff9900', // 最寄りピンと同じオレンジ色
+              'line-width': 4,
+              'line-dasharray': [2, 1], // 点線にすると「ナビっぽさ」が出ます
+            },
+          })
+        }
+
         // 🌟 現在地用の「赤いピン」を作成して地図に追加
         // 今のコードにある「toilets.forEach...」と同じ書き方です！
         new maplibregl.Marker({ color: '#ff0000' }) // 自分は赤
