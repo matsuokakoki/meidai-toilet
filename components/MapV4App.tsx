@@ -754,14 +754,15 @@ function ToiletPopup({
 }: {
   t: UiToilet
   isFav: boolean
-  userPos: { lat: number; lng: number } | null;
+  userPos: { lat: number; lng: number } | null
   onFavorite: () => void
   onClose: () => void
 }) {
-
-  const liveDistance = userPos 
-    ? Math.round(getDistanceFromLatLonInM(userPos.lat, userPos.lng, t.lat, t.lng))
-    : 0;
+  const liveDistance = userPos
+    ? Math.round(
+        getDistanceFromLatLonInM(userPos.lat, userPos.lng, t.lat, t.lng)
+      )
+    : 0
 
   const c = CONGESTION[t.congestion]
   const [gi, gl] = GENDER_INFO[t.gender] ?? ['🚻', '男女共用']
@@ -980,7 +981,7 @@ function ToiletPopup({
               >
                 {Ic.walk('#4A92D9')}
                 {/* {t.distance > 0 ? `${t.distance}m` : '計測中…'} */}
-                {userPos ? `${liveDistance}m` : 'GPSをオンにしてください'} 
+                {userPos ? `${liveDistance}m` : 'GPSをオンにしてください'}
               </span>
             ),
           },
@@ -1090,8 +1091,8 @@ function ToiletPopup({
         <button
           onClick={() => {
             // Googleマップの「現在地から目的地(緯度,経度)への徒歩ルート」を開くURL
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}&travelmode=walking`;
-            window.open(url, '_blank');
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}&travelmode=walking`
+            window.open(url, '_blank')
           }}
           style={{
             flex: 1,
@@ -1871,7 +1872,7 @@ export default function MapV4App({
       {selected && (
         <ToiletPopup
           t={selected}
-          userPos={userPos} 
+          userPos={userPos}
           isFav={favorites.has(selected.id)}
           onFavorite={() => toggleFav(selected.id)}
           onClose={() => setSelected(null)}
