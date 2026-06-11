@@ -1447,34 +1447,33 @@ export default function MapV4App({
     })
 
   const filtered = applyFilters(toilets, filters)
-    const filteredSet = new Set(filtered.map((t) => t.id))
+  const filteredSet = new Set(filtered.map((t) => t.id))
 
+  toilets.forEach((t) => {
+    t.isNearest = false
+  })
 
-    toilets.forEach((t) => { t.isNearest = false })
-      
-    // Mark nearest
-    if (userPos && filtered.length > 0) {
+  // Mark nearest
+  if (userPos && filtered.length > 0) {
+    const ni = filtered.reduce(
+      (mi, t, i) =>
+        t.distance < (filtered[mi]?.distance ?? Infinity) ? i : mi,
+      0
+    )
 
-      const ni = filtered.reduce(
-        (mi, t, i) => (t.distance < (filtered[mi]?.distance ?? Infinity) ? i : mi),
-        0
-      )
+    const nearestId = filtered[ni].id
 
-
-      const nearestId = filtered[ni].id
-
-
-      toilets.forEach((t) => {
-        t.isNearest = t.id === nearestId
-      })
-    }
+    toilets.forEach((t) => {
+      t.isNearest = t.id === nearestId
+    })
+  }
 
   const activeCount = countActive(filters)
 
   // ── Initialize MapLibre ──────────────────────────────────────────────────────
   useEffect(() => {
     if (map.current || !mapContainer.current) return
-    const currentMarkers = markerMap.current;
+    const currentMarkers = markerMap.current
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -1599,69 +1598,67 @@ export default function MapV4App({
   }, [selected?.id, filters, userPos])
 
   // ── 🌟 ルート案内（点線）を描画する処理（強化版） ────────────────────────────────────────
-    useEffect(() => {
-      const m = map.current;
-      // 地図、現在地、トイレリストが揃っているかチェック
-      if (!m || !userPos || toilets.length === 0) return;
+  useEffect(() => {
+    const m = map.current
+    // 地図、現在地、トイレリストが揃っているかチェック
+    if (!m || !userPos || toilets.length === 0) return
 
-      const drawRoute = () => {
-        // 1. 最寄りトイレを探す
-        const nearest = toilets.find((t) => t.isNearest);
-        if (!nearest) {
-          console.log("最寄りトイレが見つかりません");
-          return;
-        }
-
-        console.log(`ルート描画開始: ${nearest.name} まで`);
-
-        const sourceId = 'route-line-source';
-        const layerId = 'route-line-layer';
-
-        const geojson = {
-          type: 'Feature' as const,
-          properties: {},
-          geometry: {
-            type: 'LineString' as const,
-            coordinates: [
-              [userPos.lng, userPos.lat],
-              [nearest.lng, nearest.lat],
-            ],
-          },
-        };
-
-        // 2. 既存のレイヤーとソースがあれば一度消して作り直す（確実性を高めるため）
-        try {
-          if (m.getLayer(layerId)) m.removeLayer(layerId);
-          if (m.getSource(sourceId)) m.removeSource(sourceId);
-
-          m.addSource(sourceId, { type: 'geojson', data: geojson });
-          m.addLayer({
-            id: layerId,
-            type: 'line',
-            source: sourceId,
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': BRAND,
-              'line-width': 5, // 少し太くして見やすくします
-              'line-dasharray': [2, 1],
-              'line-opacity': 0.8,
-            },
-          });
-        } catch (e) {
-          console.error("ルート描画中にエラーが発生しました:", e);
-        }
-      };
-
-      // 地図がロード済みなら即実行、未ロードならロード完了を待つ
-      if (m.loaded()) {
-        drawRoute();
-      } else {
-        m.once('load', drawRoute);
+    const drawRoute = () => {
+      // 1. 最寄りトイレを探す
+      const nearest = toilets.find((t) => t.isNearest)
+      if (!nearest) {
+        console.log('最寄りトイレが見つかりません')
+        return
       }
+
+      console.log(`ルート描画開始: ${nearest.name} まで`)
+
+      const sourceId = 'route-line-source'
+      const layerId = 'route-line-layer'
+
+      const geojson = {
+        type: 'Feature' as const,
+        properties: {},
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: [
+            [userPos.lng, userPos.lat],
+            [nearest.lng, nearest.lat],
+          ],
+        },
+      }
+
+      // 2. 既存のレイヤーとソースがあれば一度消して作り直す（確実性を高めるため）
+      try {
+        if (m.getLayer(layerId)) m.removeLayer(layerId)
+        if (m.getSource(sourceId)) m.removeSource(sourceId)
+
+        m.addSource(sourceId, { type: 'geojson', data: geojson })
+        m.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': BRAND,
+            'line-width': 5, // 少し太くして見やすくします
+            'line-dasharray': [2, 1],
+            'line-opacity': 0.8,
+          },
+        })
+      } catch (e) {
+        console.error('ルート描画中にエラーが発生しました:', e)
+      }
+    }
+
+    // 地図がロード済みなら即実行、未ロードならロード完了を待つ
+    if (m.loaded()) {
+      drawRoute()
+    } else {
+      m.once('load', drawRoute)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userPos, filtered.map(t => t.id).join(',')]); // 🌟 依存関係を工夫して確実に更新
-
-
+  }, [userPos, filtered.map((t) => t.id).join(',')]) // 🌟 依存関係を工夫して確実に更新
 
   // ── User geolocation ─────────────────────────────────────────────────────────
   const locateUser = () => {
