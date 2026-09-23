@@ -1,5 +1,6 @@
 # 名大トイレ | Meidai Toilet
 
+A map-based web app for finding toilets around Nagoya University, with amenity filters, reviews, favorites, and rule-based congestion estimates. Developed by a university club team; my role focused on ideation, technology selection, UX direction, and code review. Junior members implemented most of the application code.
 名古屋大学のキャンパスで、近くのトイレを地図から探せるWebアプリです。設備、口コミ、距離などを見比べて行き先を選べるほか、時間帯・立地・設備・天気を使った混雑度の推定も確認できます。
 
 > **大学サークルで後輩メンバーと開発したプロジェクトのportfolio mirrorです。** [Original repository: jack-app/meidai_toilet](https://github.com/jack-app/meidai_toilet) のGit履歴を引き継いでいます。
