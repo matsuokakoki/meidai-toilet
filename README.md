@@ -107,7 +107,8 @@ Supabaseの主なデータは `toilets`、`reviews`、`favorites` テーブル�
 Node.jsはVoltaで管理し、repoではNode.js **24.15.0** を指定しています。環境変数やSupabaseの接続先は各自で用意してください。
 
 ```bash
-volta install
+volta install node@24.15.0
+volta install pnpm
 pnpm install
 pnpm dev
 ```
